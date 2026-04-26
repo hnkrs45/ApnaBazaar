@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const api = axios.create({
+export const api = axios.create({
     baseURL: "http://localhost:3000",
     // baseURL: "https://apnabazaar-backend-3iwt.onrender.com",
     withCredentials: true
@@ -126,6 +126,16 @@ export const deleteReview = (id) => {
     return api.delete(`/api/user/deletereview?productID=${id}`)
 }
 
-export const searchProduct = (name) => {
-    return api.get(`/api/product/search?name=${name}`)
+export const searchProduct = (name, location) => {
+    let url = `/api/product/search?name=${name}`;
+    if (location) url += `&location=${location}`;
+    return api.get(url)
+}
+
+export const getMessages = (id) => {
+    return api.get(`/api/message/${id}`)
+}
+
+export const sendMessage = (id, text) => {
+    return api.post(`/api/message/send/${id}`, {text})
 }

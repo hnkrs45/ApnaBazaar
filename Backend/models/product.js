@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
     name: {
@@ -24,6 +24,10 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: [true, "Category is required"],
         trim: true
+    },
+    location: {
+        type: String,
+        default: "Local Area"
     },
     brand: {
         type: String,

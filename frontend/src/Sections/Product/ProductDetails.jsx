@@ -1,22 +1,21 @@
+import { useQuery } from "@tanstack/react-query";
+import { Heart, MessageCircle, Star } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
-import { HiOutlineTruck } from "react-icons/hi";
-import { Star } from "lucide-react";
-import { Heart } from "lucide-react";
 import { FaArrowLeft } from "react-icons/fa6";
+import { HiOutlineTruck } from "react-icons/hi";
+import { MdOutlineShare } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteWishlist, getProductsById, updateWishlist } from "../../../API/api";
-import { MdOutlineShare } from "react-icons/md";
-import { CartProductContext } from "../../services/context";
-import "./productDetail.css"
-import Detail from "./detail";
-import Vendor from "./vendor";
-import Reviews from "./reviews";
-import {useQuery} from "@tanstack/react-query"
-import ProductDetailSkeleton from "./productDetailSkeleton";
-import CartPopup from "./cartPopUp";
 import { userSearchMl } from "../../../API/ml";
+import { CartProductContext } from "../../services/context";
 import { ProductShow } from "../Home/Components/productshow";
-import FavoritesSkeleton from "../User/Profile/Skeletons/favoritesSkeleton"
+import FavoritesSkeleton from "../User/Profile/Skeletons/favoritesSkeleton";
+import CartPopup from "./cartPopUp";
+import Detail from "./detail";
+import "./productDetail.css";
+import ProductDetailSkeleton from "./productDetailSkeleton";
+import Reviews from "./reviews";
+import Vendor from "./vendor";
 
 const ProductDetails = () => {
   const {user, cartItems, setCartItems, setCmenu, dataForMl, setDataForMl} = useContext(CartProductContext)
@@ -194,6 +193,9 @@ const ProductDetails = () => {
           <div className="flex justify-between">
             <h1 className="text-2xl font-semibold">{product?.name}</h1>
             <div className="flex gap-[10px]">
+              {product?.vendor?._id && (
+                 <MessageCircle onClick={() => navigate(`/chat/${product?.vendor?._id}`)} className="text-[22px] cursor-pointer hover:text-indigo-600"/>
+              )}
               <Heart onClick={handleWishlist} className={`text-[22px] cursor-pointer ${wishlist ? "fill-red-600 text-red-600" : ""}`}/>
               <MdOutlineShare onClick={handleShare} className="text-[22px] cursor-pointer"/>
             </div>

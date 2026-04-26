@@ -1,13 +1,12 @@
-import { useContext, useEffect, useState } from "react"
-import { SearchBar } from "./components/SearchBar"
-import { NavLink } from 'react-router-dom'
+import { useContext, useEffect, useState } from "react";
 import { BsCart3 } from "react-icons/bs";
-import { IoMdClose } from "react-icons/io";
-import { IoMdMenu } from "react-icons/io";
-import "./navbar.css"
-import Cart from "../Cart/cart";
+import { IoMdClose, IoMdMenu } from "react-icons/io";
+import { NavLink } from 'react-router-dom';
 import { CartProductContext } from "../../services/context";
-import NavbarSkeleton from "./NavbarSkeleton.jsx"
+import Cart from "../Cart/cart";
+import { SearchBar } from "./components/SearchBar";
+import "./navbar.css";
+import NavbarSkeleton from "./NavbarSkeleton.jsx";
 
 export const NavBar = () =>{
     const [menu, setMenu] = useState(false);
@@ -55,13 +54,21 @@ export const NavBar = () =>{
                 <SearchBar/>
                 <div className="icons flex gap-[15px] items-center">
                     {checkAuth ? 
-                        (<NavLink to="/profile"><div className="w-[40px] h-[40px] relative rounded-[50%] group">
-                            <img className="cursor-pointer w-[40px] h-[40px] rounded-[50%]" src="/profile.jpg" alt="" />
-                            <div className="absolute top-[50px] w-fit hidden bg-black/70 backdrop-blur-sm group-hover:block"><p className="text-white px-[5px] py-[2px] text-[11px]">Profile</p></div>
-                        </div></NavLink>) : 
-                        (<NavLink to="/signup">
-                            <button className={`w-[70px] h-[27px] bg-black text-white rounded-md text-[12px] font-medium ${checkAuth && loadinguser ? "hidden" : "block"}`}>Sign Up</button>
-                        </NavLink>)
+                        (<div className="flex gap-4 items-center">
+                            <NavLink to="/profile"><div className="w-[40px] h-[40px] relative rounded-[50%] group">
+                                <img className="cursor-pointer w-[40px] h-[40px] rounded-[50%]" src="/profile.jpg" alt="" />
+                                <div className="absolute top-[50px] w-fit hidden bg-black/70 backdrop-blur-sm group-hover:block"><p className="text-white px-[5px] py-[2px] text-[11px]">Profile</p></div>
+                            </div></NavLink>
+                            <button onClick={async () => { await fetch("http://localhost:3000/api/user/logout", {credentials: "include"}); window.location.href="/"; }} className="w-[70px] h-[27px] bg-red-600 text-white rounded-md text-[12px] font-medium hover:bg-red-700">Logout</button>
+                        </div>) : 
+                        (<div className="flex gap-3">
+                            <NavLink to="/signin">
+                                <button className={`w-[70px] h-[27px] border-black border-[1px] text-black rounded-md text-[12px] font-medium hover:bg-gray-100 ${checkAuth && loadinguser ? "hidden" : "block"}`}>Login</button>
+                            </NavLink>
+                            <NavLink to="/signup">
+                                <button className={`w-[70px] h-[27px] bg-black text-white rounded-md text-[12px] font-medium hover:bg-gray-800 ${checkAuth && loadinguser ? "hidden" : "block"}`}>Sign Up</button>
+                            </NavLink>
+                        </div>)
                     }
                     <div onClick={handleCartMenu} className="relative">
                         <BsCart3 className="cart-icon text-2xl cursor-pointer"/>

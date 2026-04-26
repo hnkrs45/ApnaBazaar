@@ -1,29 +1,43 @@
-import { useParams } from "react-router-dom"
-import { ProductShow } from "../Home/Components/productshow"
 import { useQuery } from "@tanstack/react-query";
-import Loading from "../Loading/loading";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { searchProduct } from "../../../API/api";
 import { userSearchMl } from "../../../API/ml";
-import "./productdetail.css"
-import { useState } from "react";
+import { ProductShow } from "../Home/Components/productshow";
+import ProductSkeleton from "../Home/Skeleton/ProductSkeleton";
+import "./productdetail.css";
 
 const Search = () => {
-    const {text} = useParams();
+    const [searchParams] = useSearchParams();
+    const name = searchParams.get('name') || "";
+    const location = searchParams.get('location') || "";
     const [selected, setSelected] = useState('name');
+    
     const {data, isLoading} = useQuery({
-        queryKey: ["search", text],
-        queryFn: () => searchProduct(text),
+        queryKey: ["search", name, location],
+        queryFn: () => searchProduct(name, location),
         select: (res) => res?.data
     })
 
     const {data: mlprd, isLoading: productLoading} = useQuery({
-        queryKey: ["mlproducts", text],
-        queryFn: () => userSearchMl(text),
+        queryKey: ["mlproducts", name],
+        queryFn: () => userSearchMl(name || "default"),
         select: (res) => res?.data
     })
 
     if (isLoading || productLoading){
-        return <Loading/>
+        return (
+            <div className="search-result-section bg-white mb-[30px] relative flex flex-col items-center mt-[120px]">
+                <div className="feature-products flex flex-col items-center">
+                    <div className="search-result-section-filter feature-products w-[1200px] flex justify-between">
+                        <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="search-product-recommendation mt-8 flex gap-4 flex-wrap justify-center w-[1200px]">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <ProductSkeleton key={n} />)}
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     let products = [];
@@ -55,7 +69,7 @@ const Search = () => {
             <div className="feature-products flex flex-col items-center">
                 <div className="search-result-section-filter feature-products w-[1200px] flex justify-between">
                     <div className="text-[24px] text-black">
-                        Search Result for <b>"{text}"</b>
+                        Search Result for <b>"{name || location || "All"}"</b>
                     </div>
                     <div className="category-section-items flex items-center gap-4 justify-start">
                         <div className="flex gap-[10px] items-center">
@@ -75,7 +89,7 @@ const Search = () => {
                         }))
                     }
                 </div>
-            </div> : <h2 className="text-[22px] font-bold mt-[50px] mb-[50px]">No Product Found with <b>"{text}"</b></h2>}
+            </div> : <h2 className="text-[22px] font-bold mt-[50px] mb-[50px]">No Product Found with <b>"{name || location || "All"}"</b></h2>}
 
             <div className="feature-products">
                 <div className="flex justify-center">

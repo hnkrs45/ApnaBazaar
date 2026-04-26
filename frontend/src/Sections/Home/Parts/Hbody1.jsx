@@ -35,15 +35,15 @@ export const Hbody1 = () => {
               quality products.
             </div>
             <div className="home-buttons-div flex gap-4 mt-5">
-              <div onClick={handleScroll} className="shopnow-btn h-[35px] w-[114px] bg-black text-white font-semibold flex justify-between px-3 items-center rounded-lg text-[12.25px]">
-                Shop Now
-                <FaArrowRight/>
+              <div onClick={handleScroll} className="cursor-pointer shopnow-btn h-[35px] w-fit min-w-[140px] bg-black text-white font-semibold flex justify-between px-3 items-center rounded-lg text-[12.25px]">
+                Browse Products
+                <FaArrowRight className="ml-2"/>
               </div>
 
               {user?.role==="vendor" && user?.vendor?.status==="Active" ? <NavLink to="/vendor/dashboard"><div className="cursor-pointer vendor-btn h-[35px] w-[141px] border-blur border-[1px] border-grey bg-white text-black font-semibold flex justify-center items-center rounded-lg text-[12.25px]">
                 Vendor Dashboard
               </div></NavLink> :<NavLink to="/vendor/form"><div className="cursor-pointer vendor-btn h-[35px] w-[141px] border-blur border-[1px] border-grey bg-white text-black font-semibold flex justify-center items-center rounded-lg text-[12.25px]">
-                Become a Vendor
+                Start Selling
               </div></NavLink>}
             </div>
 

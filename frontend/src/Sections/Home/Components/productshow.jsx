@@ -1,12 +1,10 @@
-import { useContext, useEffect, useState } from "react";
-import { FaStar } from "react-icons/fa6";
-import { FaIndianRupeeSign } from "react-icons/fa6";
-import { FaPlus } from "react-icons/fa6";
-import { CartProductContext } from "../../../services/context";
-import { NavLink } from "react-router-dom";
 import { Star } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { FaIndianRupeeSign, FaPlus } from "react-icons/fa6";
+import { NavLink } from "react-router-dom";
+import { CartProductContext } from "../../../services/context";
 import CartPopup from "../../Product/cartPopUp";
-import '../home.css'
+import '../home.css';
 
 export const ProductShow= ({product}) =>{
     const {cartItems, setCartItems, setDataForMl } = useContext(CartProductContext)
@@ -58,7 +56,7 @@ export const ProductShow= ({product}) =>{
     <NavLink onClick={handleClickedData} to={`/productdetail/${product.productID || product._id}`}>
         <div className="product-cart-component cursor-pointer border-solid relative border-[1px] border-grey-100 group h-[483px] bg-white w-[256px] rounded-xl hover:shadow-lg">
             <div className="h-[254px] w-full rounded-t-xl overflow-hidden bg-black">
-                <img className="object-cover w-[100%] h-[100%] transition-all group-hover:scale-[107%] duration-180 " src={product.images[0]} />
+                <img loading="lazy" className="object-cover w-[100%] h-[100%] transition-all group-hover:scale-[107%] duration-180 " src={product.images[0]} />
             </div>
             <div className="grid gap-[10px] mt-6 p-[14px]">
                 <div className="text-[20px] truncate">{product.name} </div>
@@ -73,6 +71,10 @@ export const ProductShow= ({product}) =>{
                     </span>
                 </div>
                 <div className="w-fit px-[5px] text-[13px] p-[3px] rounded-md border-solid border-[1px] flex justify-center items-center border-black-200">{product?.category}</div>
+                <div className="flex justify-between items-center text-[12px] text-gray-600 mt-1">
+                    <span className="truncate w-[60%]">By: {product?.vendor?.vendor?.companyName || product?.vendor?.name || "Local Vendor"}</span>
+                    <span className="truncate text-right w-[35%]">📍 {product?.vendor?.vendor?.address || product?.location || "Local Area"}</span>
+                </div>
                 <div className="absolute bottom-[20px] w-[90%]">
                     <div className="flex justify-between ">
                         <div className="flex items-center">

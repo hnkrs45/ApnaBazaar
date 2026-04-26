@@ -3,12 +3,11 @@ import CategorySection from "../Skeleton/category"
 
 export const ShopbyCategory = ({loadinguser}) =>{
     const data = [
-        {Categoryname:"Fresh Produce", no_of_items:0, img_link:"https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=300&h=300&fit=crop"},
-        {Categoryname:"Dairy & Eggs", no_of_items:0, img_link:"https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&h=300&fit=crop"},
-        {Categoryname:"Bakery", no_of_items:0, img_link:"https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&h=300&fit=crop"},
-        {Categoryname:"Meat and Seafoods", no_of_items:0, img_link:"https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=300&h=300&fit=crop"},
-        {Categoryname:"Dry Fruits", no_of_items:0, img_link:"https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.itoozhiayurveda.in%2Fayurveda-guide-to-consume-dry-fruits%2F&psig=AOvVaw3YMkyr6F4cvFXK1MVlCqdI&ust=1754990172658000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCIDC9IG2go8DFQAAAAAdAAAAABAK"},
-        {Categoryname:"Fruits", no_of_items:0, img_link:"https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&h=300&fit=crop"}
+        {Categoryname:"Electronics", no_of_items:15, img_link:"https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=300&fit=crop"},
+        {Categoryname:"Clothes", no_of_items:30, img_link:"https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=300&h=300&fit=crop"},
+        {Categoryname:"Furniture", no_of_items:8, img_link:"https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&h=300&fit=crop"},
+        {Categoryname:"Vehicles", no_of_items:5, img_link:"https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300&h=300&fit=crop"},
+        {Categoryname:"Other", no_of_items:22, img_link:"https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300&h=300&fit=crop"}
     ]
     return loadinguser ? <CategorySection/> : (
     <div className="bg-[#f5f5f7] pt-[42px] pb-[42px]">

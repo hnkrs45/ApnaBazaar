@@ -1,8 +1,8 @@
+import axios from "axios";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import axios from "axios";
-import { addVendorProduct, editVendorProduct } from "../../../../API/api";
 import Swal from "sweetalert2";
+import { addVendorProduct, editVendorProduct } from "../../../../API/api";
 
 const CLOUDINARY_UPLOAD_PRESET = "ecommerce";
 const CLOUDINARY_CLOUD_NAME = "do9m8kc0b";
@@ -93,6 +93,7 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
           vendor: "",
           stock: "",
           category: "",
+          location: "",
           description: "",
           images: [],
         });
@@ -157,6 +158,7 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
           vendor: "",
           stock: "",
           category: "",
+          location: "",
           description: "",
           images: [],
         });
@@ -177,7 +179,7 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
       });
     }
   }
-  const options = ["Groceries & Staples","Fruits & Vegetables","Dairy & Bakery","Snacks & Beverages","Personal Care","Home & Cleaning Essentials","Packaged Foods","Baby & Kids Care","Stationery & Household Items","Meat, Fish & Frozen Foods", "Dry Fruits"]
+  const options = ["Electronics", "Clothes", "Furniture", "Vehicles", "Other"];
   return (
     <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6 mt-[30px] mb-[30px]">
       <h2 className="text-lg font-semibold mb-4">Add New Product</h2>
@@ -198,6 +200,16 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
           name="price"
           placeholder="Price"
           value={product.price}
+          onChange={handleChange}
+          className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+        />
+
+        {/* Location */}
+        <input
+          type="text"
+          name="location"
+          placeholder="Location"
+          value={product.location}
           onChange={handleChange}
           className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
         />

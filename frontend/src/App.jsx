@@ -1,32 +1,30 @@
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { authCheck, userInteresctionDataServer } from "../API/api";
+import ScrollToTop from "./scrolltotop";
+import { MeetTeam } from "./Sections/About/Parts/MeetTeam";
 import { Mission } from "./Sections/About/Parts/Mission";
 import { Stats } from "./Sections/About/Parts/stats";
 import { Story } from "./Sections/About/Parts/Story";
-import { MeetTeam } from "./Sections/About/Parts/MeetTeam";
 import { CategoryBody } from "./Sections/Category/Parts/Body";
+import Chat from "./Sections/Chat/Chat";
+import ContactUs from "./Sections/Contact/Parts/contact";
+import { FooterSection } from "./Sections/footer-section/Footer";
 import { HomeBody } from "./Sections/Home/HomeBody";
 import { NavBar } from "./Sections/Navbar/navbar";
-import { Routes, Route, useLocation } from "react-router-dom";
-import { CartProductContext } from "./services/context";
-import { FooterSection } from "./Sections/footer-section/Footer";
-import ContactUs from "./Sections/Contact/Parts/contact";
-import { useState } from "react";
-import SignupForm from "./Sections/User/SignUp";
-import SigninForm from "./Sections/User/Signin";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-import { useQuery } from "@tanstack/react-query";
-import { authCheck } from "../API/api";
-import Profile from "./Sections/User/Profile/profile";
 import Checkout from "./Sections/Order/checkout";
-import ProductDetails from "./Sections/Product/ProductDetails";
-import ScrollToTop from "./scrolltotop";
 import Orders from "./Sections/Order/orders";
-import VendorForm from "./Sections/Vendor/vendorForm";
-import { VendorDashboard } from "./Sections/Vendor/vendorDashboard";
 import TrackOrder from "./Sections/Order/trackOrder";
-import { useEffect } from "react";
-import { userInteresctionDataMl } from "../API/ml";
-import { userInteresctionDataServer } from "../API/api";
+import ProductDetails from "./Sections/Product/ProductDetails";
 import Search from "./Sections/Product/search";
+import Profile from "./Sections/User/Profile/profile";
+import SigninForm from "./Sections/User/Signin";
+import SignupForm from "./Sections/User/SignUp";
+import { VendorDashboard } from "./Sections/Vendor/vendorDashboard";
+import VendorForm from "./Sections/Vendor/vendorForm";
+import { CartProductContext } from "./services/context";
 
 const GOOGLE_CLIENT_ID = "316084868865-6cm9ag49f38mgqp25ttja2i61cbjbl6l.apps.googleusercontent.com";
 
@@ -104,6 +102,12 @@ const App = () => {
   }, [dataForMl]);
 
 
+  const ProtectedRoute = ({ children, isLoading, checkAuth }) => {
+    if (isLoading) return <p className="text-center py-5">Loading...</p>;
+    if (!checkAuth) return <Navigate to="/signin" replace />;
+    return children;
+  };
+
   return (
     <CartProductContext.Provider
       value={{
@@ -148,14 +152,15 @@ const App = () => {
             </GoogleAuthWrapper>
           }
         />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/orders" element={<Orders user={data?.user} />} />
+        <Route path="/profile" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Profile /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Checkout /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Orders user={data?.user} /></ProtectedRoute>} />
         <Route path="productdetail/:Productid" element={<ProductDetails />} />
-        <Route path="/vendor/form" element={<VendorForm/>} />
-        <Route path="/vendor/dashboard" element={<VendorDashboard/>} />
-        <Route path="/orders/:orderId" element={<TrackOrder/>} />
-        <Route path="/search/:text" element={<Search/>} />
+        <Route path="/vendor/form" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><VendorForm/></ProtectedRoute>} />
+        <Route path="/vendor/dashboard" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><VendorDashboard/></ProtectedRoute>} />
+        <Route path="/orders/:orderId" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><TrackOrder/></ProtectedRoute>} />
+        <Route path="/search" element={<Search/>} />
+        <Route path="/chat/:userId" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Chat/></ProtectedRoute>} />
       </Routes>
 
       {!isSignupPage && <FooterSection loadinguser={isLoading} />}

@@ -2,13 +2,17 @@ import PRODUCT from "../models/product.js";
 
 export const getproduct = async (req, res) => {
     const {cat} = req.query;
-    const products = await PRODUCT.find({category:cat});
+    const products = await PRODUCT.find({category:cat}).populate("vendor");
     if (products.length==0) return res.json({message: `Products not found with category ${cat}`})
     return res.json({success: true, message: `Products with category ${cat}`,items: products.length, products})
 }
 
 export const getallproducts = async (req,res) => {
-    const products = await PRODUCT.find({isActive: true}).lean();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const products = await PRODUCT.find({isActive: true}).populate("vendor").skip(skip).limit(limit).lean();
     if (products.length==0) return res.json({message: `Products not found`})
     const formattedProducts = products.map(p => {
         const {stock, ...rest} = p;
@@ -35,21 +39,30 @@ export const getproductsbyid = async (req, res) => {
 
 export const searchProduct = async (req, res) => {
   try {
-    const { name } = req.query;
+    const { name, location } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     let products = [];
+    
+    let baseQuery = { isActive: true };
+    if (location) {
+      baseQuery.location = { $regex: location, $options: "i" };
+    }
 
     if (name) {
       const matchedProducts = await PRODUCT.find({
-        name: { $regex: name, $options: "i" },
-        isActive: true
-      }).lean();
+        ...baseQuery,
+        name: { $regex: name, $options: "i" }
+      }).populate("vendor").lean();
 
       if (matchedProducts.length > 0) {
         const categories = [...new Set(matchedProducts.map(p => p.category))];
         const categoryProducts = await PRODUCT.find({
-          category: { $in: categories },
-          isActive: true
-        }).lean();
+          ...baseQuery,
+          category: { $in: categories }
+        }).populate("vendor").lean();
 
         const allProductsMap = new Map();
         [...matchedProducts, ...categoryProducts].forEach(p => {
@@ -57,9 +70,10 @@ export const searchProduct = async (req, res) => {
         });
 
         products = Array.from(allProductsMap.values());
+        products = products.slice(skip, skip + limit);
       }
     } else {
-      products = await PRODUCT.find({ isActive: true }).lean();
+      products = await PRODUCT.find(baseQuery).populate("vendor").skip(skip).limit(limit).lean();
     }
 
     const formattedProducts = products.map(product => ({

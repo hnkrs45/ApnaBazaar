@@ -1,12 +1,12 @@
-import PRODUCT from "../models/product.js";
-import ORDER from "../models/order.js"; // assuming you have an order model
 import { sendOrderStatusMail } from "../emails/sendMail.js";
+import ORDER from "../models/order.js"; // assuming you have an order model
+import PRODUCT from "../models/product.js";
 import USER from "../models/user.js";
 
 // ✅ Add Product by Vendor
 export const addVendorProduct = async (req, res) => {
   try {
-    const { images, name, price, stock, description, category } = req.body;
+    const { images, name, price, stock, description, category, location } = req.body;
 
     if (!name || !price || !description || !category || !images?.length) {
       return res.status(400).json({
@@ -21,6 +21,7 @@ export const addVendorProduct = async (req, res) => {
       description,
       price,
       category,
+      location,
       images,
       stock,
       vendor: req?.user?._id,
@@ -46,7 +47,7 @@ export const addVendorProduct = async (req, res) => {
 };
 
 export const editVendorProduct = async (req ,res) => {
-  const {id, images, name, price, stock, description, category} = req.body;
+  const {id, images, name, price, stock, description, category, location} = req.body;
 
   try {
     const product = await PRODUCT.findById(id)
@@ -59,6 +60,7 @@ export const editVendorProduct = async (req ,res) => {
     product.stock = stock
     product.description = description
     product.category = category
+    product.location = location
     product.images = images
 
     await product.save()
