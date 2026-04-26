@@ -25,7 +25,7 @@ const Chat = () => {
     // Set up socket
     useEffect(() => {
         if (me) {
-            const newSocket = io("http://localhost:3000", {
+            const newSocket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:3000", {
                 query: { userId: me._id },
             });
             setSocket(newSocket);

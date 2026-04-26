@@ -93,7 +93,8 @@ const App = () => {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (dataForMl?.products?.length > 0) {
-        navigator.sendBeacon("http://localhost:3000/api/user/interaction", JSON.stringify(dataForMl));
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        navigator.sendBeacon(`${backendUrl}/api/user/interaction`, JSON.stringify(dataForMl));
         setDataForMl({user: data?.user?._id, products: [], currentView: null });
       }
     };

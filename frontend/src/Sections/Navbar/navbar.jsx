@@ -59,7 +59,11 @@ export const NavBar = () =>{
                                 <img className="cursor-pointer w-[40px] h-[40px] rounded-[50%]" src="/profile.jpg" alt="" />
                                 <div className="absolute top-[50px] w-fit hidden bg-black/70 backdrop-blur-sm group-hover:block"><p className="text-white px-[5px] py-[2px] text-[11px]">Profile</p></div>
                             </div></NavLink>
-                            <button onClick={async () => { await fetch("http://localhost:3000/api/user/logout", {credentials: "include"}); window.location.href="/"; }} className="w-[70px] h-[27px] bg-red-600 text-white rounded-md text-[12px] font-medium hover:bg-red-700">Logout</button>
+                            <button onClick={async () => { 
+                                const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+                                await fetch(`${backendUrl}/api/user/logout`, {credentials: "include"}); 
+                                window.location.href="/"; 
+                            }} className="w-[70px] h-[27px] bg-red-600 text-white rounded-md text-[12px] font-medium hover:bg-red-700">Logout</button>
                         </div>) : 
                         (<div className="flex gap-3">
                             <NavLink to="/signin">
