@@ -12,7 +12,7 @@ import { ProductShow } from "../Home/Components/productshow";
 import FavoritesSkeleton from "../User/Profile/Skeletons/favoritesSkeleton";
 import CartPopup from "./cartPopUp";
 import Detail from "./detail";
-import "./productDetail.css";
+import "./productdetail.css";
 import ProductDetailSkeleton from "./productDetailSkeleton";
 import Reviews from "./reviews";
 import Vendor from "./vendor";
