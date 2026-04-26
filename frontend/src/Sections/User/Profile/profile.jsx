@@ -8,7 +8,7 @@ import {logout} from "../../../../API/api"
 import { useNavigate } from "react-router-dom";
 import "./profile.css"
 import Favorites from "./favorites";
-import ProfileSkeleton from "./Skeletons/ProfileSkeleton"
+import ProfileSkeleton from "./Skeletons/profileSkeleton"
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState(0);
