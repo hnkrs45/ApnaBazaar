@@ -1,11 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 
+const MotionDiv = motion.div;
+
 const CartPopup = ({ show, message }) => {
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -14,7 +16,7 @@ const CartPopup = ({ show, message }) => {
         >
           <CheckCircle className="text-green-600" size={24} />
           <p className="text-gray-800 font-medium">{message}</p>
-        </motion.div>
+        </MotionDiv>
       )}
     </AnimatePresence>
   );

@@ -39,13 +39,13 @@ export const VendorDashboard = () => {
   };
 
   return (
-    <section>
+    <section className="bg-gray-50/50 min-h-screen">
         <div>
-            <Sidebar setSelectedField={setSelectedField} isOpen={isOpen} setIsOpen={setIsOpen}/>
+            <Sidebar setSelectedField={setSelectedField} isOpen={isOpen} setIsOpen={setIsOpen} selectedField={selectedField}/>
         </div>
         <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`fixed top-2 z-50 p-1 bg-black text-white rounded-lg shadow-lg hover:bg-gray-100 hover:text-black left-3`}
+            className={`fixed top-4 z-50 p-3 bg-white text-gray-600 rounded-2xl shadow-sm border border-gray-100 hover:text-organic-green hover:border-organic-green lg:hidden left-4 transition-all`}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -58,4 +58,4 @@ export const VendorDashboard = () => {
   );
 }
 
-export default Dashboard
+export default VendorDashboard

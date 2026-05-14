@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { IoPeopleOutline } from "react-icons/io5";
 import { CiHeart } from "react-icons/ci";
 import { LuLeaf } from "react-icons/lu";
@@ -19,7 +20,7 @@ export const Stats = () =>{
                         <div key={index} className="text-center">
                             <div className="flex justify-center">
                                 <div className="bg-neutral-200 h-14 w-14 rounded-full flex items-center mb-2 justify-center">
-                                    <Icon className="text-2xl"/>
+                                    {createElement(Icon, { className: "text-2xl" })}
                                 </div>
                             </div>
                             <div className="text-2xl mb-2 font-semibold ">{value}</div>

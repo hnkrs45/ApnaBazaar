@@ -77,7 +77,7 @@ export default function SignupForm() {
       password,
       subscribe
     }
-    const res = sendUserData(sendData);
+    sendUserData(sendData);
     navigate('/login')
     setFormData({
       firstName: "",

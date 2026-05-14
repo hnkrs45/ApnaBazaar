@@ -151,7 +151,7 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
           showConfirmButton: false,
         });
 
-        // refetch();
+        refetch();
         setProduct({
           name: "",
           price: "",
@@ -257,8 +257,20 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
         {/* Preview of selected files */}
         <div className="col-span-2 flex gap-3 flex-wrap">
           {product.images.map((url, idx) => (
-            <div key={idx} className="w-20 h-20 relative border rounded-md overflow-hidden">
+            <div key={idx} className="w-24 h-24 relative border-2 border-gray-200 rounded-xl overflow-hidden group">
               <img src={url} alt={`uploaded-${idx}`} className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => {
+                  setProduct(prev => ({
+                    ...prev,
+                    images: prev.images.filter((_, i) => i !== idx)
+                  }))
+                }}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                &times;
+              </button>
             </div>
           ))}
         </div>

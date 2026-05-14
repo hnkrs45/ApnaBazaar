@@ -4,12 +4,14 @@ import { LuClock3 } from "react-icons/lu";
 import { IoShieldCheckmarkOutline } from "react-icons/io5";
 import { CiDeliveryTruck } from "react-icons/ci";
 import { FaArrowRight } from "react-icons/fa6";
-import {NavLink} from "react-router-dom"
+import { NavLink } from "react-router-dom"
 import { useContext } from "react";
 import { CartProductContext } from "../../../services/context";
+import { useLanguage } from "../../../services/LanguageContext";
 
 export const Hbody1 = () => {
   const {user, loadinguser} = useContext(CartProductContext)
+  const { t } = useLanguage();
 
   const handleScroll = () => {
     const productsSection = document.getElementById("feature-products");
@@ -18,60 +20,53 @@ export const Hbody1 = () => {
     }
   }
   return (
-    <div className="home-hero bg-[#f8f8f9] flex justify-center pt-[130px]">
-      <div className="hero w-[80vw] flex justify-center gap-[30px] items-center">
+    <div className="home-hero bg-gradient-to-b from-organic-green/5 to-white flex justify-center pt-[120px] pb-16 px-6">
+      <div className="hero w-full max-w-7xl flex justify-between gap-12 items-center">
         {loadinguser ? (
           <HeroSkeleton />
         ) : (
             <>
           <div className="hero-top-seciton">
             <div className="hero-text hero-section-text text-[42px] text-[#070616]">
-              <div>Farm-Fresh Groceries</div>
-              <div>Delivered to Your Door</div>
+              <div>{t('hero.title')}</div>
+              <div>{t('hero.subtitle')}</div>
             </div>
             <div className="hero-text text-[20px] mt-6 text-neutral-500 font-xl">
-              Discover the best local farms in your area. Get farm-fresh
-              organic produce and dairy delivered straight to your door.
+              {t('hero.description')}
             </div>
             <div className="home-buttons-div flex gap-4 mt-5">
-              <div onClick={handleScroll} className="cursor-pointer shopnow-btn h-[35px] w-fit min-w-[140px] bg-black text-white font-semibold flex justify-between px-3 items-center rounded-lg text-[12.25px]">
-                Browse Products
-                <FaArrowRight className="ml-2"/>
+              <div onClick={handleScroll} className="cursor-pointer shopnow-btn h-[45px] w-fit min-w-[160px] bg-organic-green text-white font-bold flex justify-center gap-3 px-6 items-center rounded-full text-[14px] shadow-lg hover:bg-organic-green-dark transition-all">
+                {t('hero.browse')}
+                <FaArrowRight/>
               </div>
 
-              {user?.role==="vendor" && user?.vendor?.status==="Active" ? <NavLink to="/vendor/dashboard"><div className="cursor-pointer vendor-btn h-[35px] w-[141px] border-blur border-[1px] border-grey bg-white text-black font-semibold flex justify-center items-center rounded-lg text-[12.25px]">
-                Vendor Dashboard
-              </div></NavLink> :<NavLink to="/vendor/form"><div className="cursor-pointer vendor-btn h-[35px] w-[141px] border-blur border-[1px] border-grey bg-white text-black font-semibold flex justify-center items-center rounded-lg text-[12.25px]">
-                Start Selling
+              {user?.role==="vendor" && user?.vendor?.status==="Active" ? <NavLink to="/vendor/dashboard"><div className="cursor-pointer vendor-btn h-[45px] w-[180px] border-organic-green border-[2px] bg-white text-organic-green font-bold flex justify-center items-center rounded-full text-[14px] hover:bg-organic-green/5 transition-all">
+                {t('hero.vendorDashboard')}
+              </div></NavLink> :<NavLink to="/vendor/form"><div className="cursor-pointer vendor-btn h-[45px] w-[200px] border-organic-green border-[2px] bg-white text-organic-green font-bold flex justify-center items-center rounded-full text-[14px] hover:bg-organic-green/5 transition-all">
+                {t('hero.startSelling')}
               </div></NavLink>}
             </div>
 
-            <div className="hero-text quality-btns h-[98px] flex justify-between px-10 pt-10">
-              <div>
-                <div className="flex justify-center">
-                  <div className="h-[42px] w-[42px] bg-[#e3e3e6] flex justify-center items-center rounded-lg">
-                    <CiDeliveryTruck/>
-                  </div>
+            <div className="hero-text quality-btns h-[98px] flex justify-between px-10 pt-10 border-t border-gray-100 mt-10">
+              <div className="flex flex-col items-center">
+                <div className="h-[48px] w-[48px] bg-organic-green/10 text-organic-green flex justify-center items-center rounded-full mb-2">
+                  <CiDeliveryTruck size={24}/>
                 </div>
-                <div className="text-[12.25px] pt-2">Same Day Delivery</div>
+                <div className="text-[13px] font-bold text-gray-700">{t('hero.delivery')}</div>
               </div>
 
-              <div>
-                <div className="flex justify-center">
-                  <div className=" h-[42px] w-[42px] bg-[#e3e3e6] flex justify-center items-center rounded-lg">
-                    <IoShieldCheckmarkOutline/>
-                  </div>
+              <div className="flex flex-col items-center">
+                <div className="h-[48px] w-[48px] bg-organic-green/10 text-organic-green flex justify-center items-center rounded-full mb-2">
+                  <IoShieldCheckmarkOutline size={22}/>
                 </div>
-                <div className="text-[12.25px] pt-2">Quality Guaranteed</div>
+                <div className="text-[13px] font-bold text-gray-700">{t('hero.quality')}</div>
               </div>
 
-              <div>
-                <div className="flex justify-center">
-                  <div className="h-[42px] w-[42px] bg-[#e3e3e6] flex justify-center items-center rounded-lg">
-                    <LuClock3/>
-                  </div>
+              <div className="flex flex-col items-center">
+                <div className="h-[48px] w-[48px] bg-organic-green/10 text-organic-green flex justify-center items-center rounded-full mb-2">
+                  <LuClock3 size={20}/>
                 </div>
-                <div className="text-[12.25px] pt-2">Fresh Daily</div>
+                <div className="text-[13px] font-bold text-gray-700">{t('hero.fresh')}</div>
               </div>
             </div>
           </div>
@@ -80,7 +75,7 @@ export const Hbody1 = () => {
               <div>
                 <div className="text-[21px] justify-center flex">10K+</div>
                 <div className="text-[12.25px] text-[#717182] ">
-                  Happy Customers
+                  {t('hero.happyCustomers')}
                 </div>
               </div>
             </div>
@@ -92,7 +87,7 @@ export const Hbody1 = () => {
               <div>
                 <div className="text-[21px] justify-center flex">500+</div>
                 <div className="text-[12.25px] text-[#717182] ">
-                  Local Vendors
+                  {t('hero.localVendors')}
                 </div>
               </div>
             </div>

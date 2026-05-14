@@ -48,15 +48,18 @@ const Checkout = () => {
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
         script.async = true;
         document.body.appendChild(script);
-        if (cartItems.length===0){
-            navigate("/")
-        }
 
         return () => {
             document.body.removeChild(script);
         };
 
     }, []);
+
+    useEffect(() => {
+        if (cartItems.length===0){
+            navigate("/")
+        }
+    }, [cartItems.length, navigate]);
     useEffect(() => {
         let subtotal = 0;
         for (let i=0;i<cartItems.length;i++){
@@ -131,7 +134,7 @@ const Checkout = () => {
                 currency: "INR",
                 name: data.product_name,
                 description: data.description,
-                image: orderData?.items[0]?.images[0],
+                image: orderData?.items?.[0]?.images?.[0],
                 order_id: data.order_id,
                 handler: async function (response) {
                     const verifyRes = await verifyPayment({
@@ -180,42 +183,67 @@ const Checkout = () => {
         return <Loading/>
     }
   return isLoading ? <CheckoutSkeleton/> : (
-    <>
-      <section className="min-h-screen flex justify-center bg-[#f3f3f5]">
+    <section className="min-h-screen flex justify-center bg-gray-50/50 py-16 px-6">
+      <div className="w-full max-w-7xl">
         {orderStatus ? <OrderPage orderData={orderData}/> : 
-        (<div className="checkout-section w-[1200px] relative flex gap-[30px] p-[30px] mt-[50px]">
-            <div className="checkout-section-left flex flex-col gap-[30px] w-[600px]">
-                <div className="flex gap-[20px] items-center">
-                    <FaArrowLeft onClick={() => navigate(-1)} className="cursor-pointer text-[16px]"/>
+        (<div className="checkout-section relative flex flex-col lg:flex-row gap-12 mt-8">
+            <div className="checkout-section-left flex flex-col gap-10 flex-1">
+                <div className="flex gap-6 items-center mb-4">
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="p-3 rounded-full bg-white shadow-sm border border-gray-100 hover:text-organic-green hover:shadow-md transition-all"
+                    >
+                        <FaArrowLeft size={18}/>
+                    </button>
                     <div className="flex flex-col">
-                        <h3 className="text-[20px] font-semibold">Checkout</h3>
-                        <p className="text-[#717182] text-[13px]">Complete your order from Apnabazaar</p>
+                        <h3 className="text-[28px] font-black text-gray-800 leading-none">Checkout</h3>
+                        <p className="text-gray-500 text-sm mt-2">Complete your order from Apnabazaar</p>
                     </div>
                 </div>
-                <div className="steps flex max-w-[80vw]">
+                
+                <div className="steps flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                     {[1,2,3].map((step, index) => (
-                        <div key={index} className="flex items-center">
-                            <div className={`w-[27px] h-[27px] text-[11px] text-[#717182] rounded-[50%] border-2 flex justify-center items-center border-[#717182] ${count>step ? "text-white bg-black border-none" : count===step ? "bg-black border-none text-white" : "bg-transparent"}`}>
-                                {count>step ? "✓" : step}
+                        <div key={index} className="flex items-center flex-1 last:flex-none">
+                            <div className="flex flex-col items-center gap-2">
+                                <div className={`w-10 h-10 text-sm font-black rounded-full flex justify-center items-center transition-all ${count > step ? "bg-organic-green text-white shadow-lg shadow-organic-green/20" : count === step ? "bg-gray-800 text-white shadow-lg" : "bg-gray-100 text-gray-400 border border-gray-200"}`}>
+                                    {count > step ? "✓" : step}
+                                </div>
+                                <span className={`text-[11px] font-bold uppercase tracking-wider ${count >= step ? "text-gray-800" : "text-gray-400"}`}>
+                                    {step === 1 ? "Address" : step === 2 ? "Delivery" : "Payment"}
+                                </span>
                             </div>
-                            {index !== [1,2,3].length - 1 && (
-                                <div className={`flex-1 w-[80px] h-[2px] mx-2 bg-[#ececf0] ${count > step ? "bg-black" : "bg-[#717182]"}`}/>
+                            {index !== 2 && (
+                                <div className={`h-[2px] mx-4 flex-1 transition-all ${count > step ? "bg-organic-green" : "bg-gray-200"}`}/>
                             )}
                         </div>
                         )
                     )}
                 </div>
-                {user?.addresses?.length > 0 ? 
-                    <Addresses user={user} addNew={addNew} setaddNew={setaddNew} addressForm={addressForm} setAddressForm={setAddressForm} setCount={setCount} count={count}/> :
-                    <AddressForm addressForm={addressForm} setAddressForm={setAddressForm} setCount={setCount} count={count}/>
-                }
-                <DeliveryOption count={count} setCount={setCount} setSelected={setSelected} selected={selected} priceDetail={priceDetail}/>
-                <PaymentOptions count={count} setCount={setCount} paymentSelected={paymentSelected} setPaymentSelected={setPaymentSelected} handleCreateOrder={handleCreateOrder} loading={loading}/>
+
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                    {user?.addresses?.length > 0 ? 
+                        <Addresses user={user} addNew={addNew} setaddNew={setaddNew} addressForm={addressForm} setAddressForm={setAddressForm} setCount={setCount} count={count}/> :
+                        <AddressForm addressForm={addressForm} setAddressForm={setAddressForm} setCount={setCount} count={count}/>
+                    }
+                </div>
+
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                    <DeliveryOption count={count} setCount={setCount} setSelected={setSelected} selected={selected} priceDetail={priceDetail}/>
+                </div>
+
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                    <PaymentOptions count={count} setCount={setCount} paymentSelected={paymentSelected} setPaymentSelected={setPaymentSelected} handleCreateOrder={handleCreateOrder} loading={loading}/>
+                </div>
             </div>
-            <OrderDetail cartItems={cartItems} priceDetail={priceDetail}/>
+            
+            <div className="lg:w-[400px]">
+                <div className="sticky top-24">
+                    <OrderDetail cartItems={cartItems} priceDetail={priceDetail}/>
+                </div>
+            </div>
         </div>)}
-      </section>
-    </>
+      </div>
+    </section>
   )
 }
 

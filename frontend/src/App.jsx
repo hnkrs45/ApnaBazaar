@@ -50,13 +50,14 @@ const App = () => {
     const saved = localStorage.getItem("interaction");
     return saved ? JSON.parse(saved) : {};
   });
+  const userId = data?.user?._id;
   
   useEffect(() => {
     setDataForMl(prev => ({
       ...prev,
-      user: data?.user?._id,
+      user: userId,
     }))
-  },[data])
+  },[userId])
 
   const checkAuth = !!data?.isAuthenticate;
 
@@ -73,7 +74,7 @@ const App = () => {
         const res = await userInteresctionDataServer(dataForMl);
         console.log("Interaction data sent:", res?.data);
 
-        setDataForMl({user: data?.user?._id, products: [], currentView: null });
+        setDataForMl({user: userId, products: [], currentView: null });
         localStorage.removeItem("interaction");
       } catch (err) {
         console.error("Error sending interaction data:", err);
@@ -86,7 +87,7 @@ const App = () => {
 
     const interval = setInterval(sendInteractionData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [dataForMl]);
+  }, [dataForMl, userId]);
 
 
 
@@ -95,12 +96,12 @@ const App = () => {
       if (dataForMl?.products?.length > 0) {
         const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
         navigator.sendBeacon(`${backendUrl}/api/user/interaction`, JSON.stringify(dataForMl));
-        setDataForMl({user: data?.user?._id, products: [], currentView: null });
+        setDataForMl({user: userId, products: [], currentView: null });
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [dataForMl]);
+  }, [dataForMl, userId]);
 
 
   const ProtectedRoute = ({ children, isLoading, checkAuth }) => {

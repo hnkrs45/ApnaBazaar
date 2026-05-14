@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, CheckCircle, Clock, Package, Eye, EyeIcon } from "lucide-react";
+import { Search, Filter, CheckCircle, Clock, Package, EyeIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllOrders } from "../../API/product";
 import OrderCard from "./orderDetail"
@@ -46,7 +46,7 @@ export default function Orders() {
     return matchesStatus && matchesSearch;
   });
 
-  const onUpdateStatus = async (id, nextStatus) => {
+  const onUpdateStatus = async () => {
     
   }
 

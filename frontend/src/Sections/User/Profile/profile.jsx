@@ -31,7 +31,7 @@ const Profile = () => {
     if (!loadinguser && !user){
       navigate(`/signup`)
     }
-  },[user])
+  },[loadinguser, navigate, user])
   return loadinguser ? <ProfileSkeleton/> : (
     <section className="min-h-screen bg-gray-50 flex justify-center">
       <div className="profile-section w-[1200px] p-6 mt-[120px]">
@@ -72,7 +72,7 @@ const Profile = () => {
           ))}
         </div>
 
-        {activeTab === 0 ? <Overview user={user} loadinguser={loadinguser} /> : activeTab === 1 ? <PersonalInfo user={user} loadinguser={loadinguser} /> : activeTab === 2 ? <SavedAddresses user={user} loadinguser={loadinguser} /> : <Favorites loadinguser={loadinguser}/>}
+        {activeTab === 0 ? <Overview loadinguser={loadinguser} /> : activeTab === 1 ? <PersonalInfo user={user} loadinguser={loadinguser} /> : activeTab === 2 ? <SavedAddresses user={user} loadinguser={loadinguser} /> : <Favorites loadinguser={loadinguser}/>}
       </div>
     </section>
   );

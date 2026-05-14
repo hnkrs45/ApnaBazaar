@@ -136,7 +136,7 @@ export default function TrackOrder() {
             return (<div key={index} className="flex justify-between items-center border rounded-xl p-4">
               <div className="flex items-center space-x-4">
                 <img
-                  src={item?.product?.images[0]}
+                  src={item?.product?.images?.[0] || item?.images?.[0]}
                   alt={item?.name}
                   className="w-16 h-16 rounded-lg object-cover"
                 />

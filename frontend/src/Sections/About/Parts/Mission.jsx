@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { IoPeopleOutline } from "react-icons/io5";
 import { CiHeart } from "react-icons/ci";
 import { LuLeaf } from "react-icons/lu";
@@ -25,7 +26,7 @@ export const Mission = () =>{
                             <div key={index} className="w-[242px] h-[186px] bg-white rounded-lg p-[21px] items-center">
                                 <div className="justify-center flex">
                                     <div className="bg-black h-[39px] w-[39px] rounded-lg flex items-center mb-[10px] justify-center">
-                                        <Icon className="text-2xl text-white"/>
+                                        {createElement(Icon, { className: "text-2xl text-white" })}
                                     </div>
                                 </div>
                                 <div className="mb-[14px] flex justify-center">{value}</div>

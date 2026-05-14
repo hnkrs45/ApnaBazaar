@@ -76,7 +76,7 @@ export default function Products() {
         Swal.fire("Deleted!", "Selected products have been deleted.", "success");
         setSelectedProducts([]);
         refetch();
-      } catch (error) {
+      } catch {
         Swal.fire("Oops!", "Something went wrong.", "error");
       }
     }

@@ -7,6 +7,7 @@ import { MdOutlineShare } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteWishlist, getProductsById, updateWishlist } from "../../../API/api";
 import { userSearchMl } from "../../../API/ml";
+import { useLanguage } from "../../services/LanguageContext";
 import { CartProductContext } from "../../services/context";
 import { ProductShow } from "../Home/Components/productshow";
 import FavoritesSkeleton from "../User/Profile/Skeletons/favoritesSkeleton";
@@ -18,6 +19,7 @@ import Reviews from "./reviews";
 import Vendor from "./vendor";
 
 const ProductDetails = () => {
+  const { t } = useLanguage();
   const {user, cartItems, setCartItems, setCmenu, dataForMl, setDataForMl} = useContext(CartProductContext)
   const [wishlist, setWishlist] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -61,12 +63,12 @@ const ProductDetails = () => {
   useEffect(() => {
     const check = user?.wishlist?.includes(Productid)
     check ? setWishlist(true) : setWishlist(false);
-  },[user, param?.Productid])
+  },[user, Productid])
 
   useEffect(() => {
     const product = cartItems.filter(p => p._id === Productid)
     product.length===0 ? setBtn("Add to Cart") : setBtn("Go to Cart")
-  },[cartItems])
+  },[cartItems, Productid])
 
   useEffect(() => {
     return () => {
@@ -97,7 +99,7 @@ const ProductDetails = () => {
         });
       }
     };
-  }, [dataForMl?.currentView]);
+  }, [dataForMl?.currentView, setDataForMl]);
 
   const handleAddtoCart = () => {
     if (btn === "Add to Cart") {
@@ -174,106 +176,177 @@ const ProductDetails = () => {
     return <FavoritesSkeleton/>
   }
   return (
-    <section className="product-detail flex flex-col items-center">
-      <div className="product-detail-section w-[1200px] mt-[120px] mx-auto grid grid-cols-2 gap-10 p-6">
-        <div onClick={() => navigate(-1)} className="cursor-pointer col-span-2 flex gap-[10px] items-center">
-          <FaArrowLeft/>
-          <p>Back to products</p>
+    <section className="product-detail flex flex-col items-center bg-gray-50/30 min-h-screen">
+      <div className="product-detail-section w-full max-w-7xl mt-[100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 p-6 bg-white rounded-3xl shadow-sm border border-gray-100">
+        <div className="md:col-span-2">
+            <button 
+                onClick={() => navigate(-1)} 
+                className="flex items-center gap-2 text-gray-500 hover:text-organic-green transition-colors font-semibold text-sm group"
+            >
+                <FaArrowLeft className="group-hover:-translate-x-1 transition-transform"/>
+                {t('nav.back')}
+            </button>
         </div>
-        <div className="product-detail-section-left">
-          <img src={selectedImage} alt="Product" className="rounded-2xl shadow-md w-full h-[400px] object-contain"/>
-          <div className="flex flex-wrap gap-2 mt-4">
-            {product?.images.map((img, i) => (
-              <img key={i} src={img} alt={`thumb-${i}`} onClick={() => setSelectedImage(img)} className={`w-20 h-20 rounded-lg object-contain cursor-pointer border ${selectedImage === img ? "border-black" : "border-gray-300"}`}/>
+        
+        <div className="product-detail-section-left space-y-6">
+          <div className="bg-gray-50 rounded-3xl p-8 flex justify-center items-center h-[500px] border border-gray-100 overflow-hidden group">
+            <img 
+                src={selectedImage} 
+                alt={product?.name} 
+                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+            />
+          </div>
+          <div className="flex flex-wrap gap-4 justify-center">
+            {product?.images?.map((img, i) => (
+              <button 
+                key={i} 
+                onClick={() => setSelectedImage(img)}
+                className={`w-24 h-24 rounded-2xl p-2 border-2 transition-all overflow-hidden ${selectedImage === img ? "border-organic-green bg-white shadow-md" : "border-gray-100 bg-gray-50 hover:border-organic-green/30"}`}
+              >
+                <img src={img} alt={`thumb-${i}`} className="w-full h-full object-contain"/>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="product-detail-section-right space-y-4">
-          <div className="flex justify-between">
-            <h1 className="text-2xl font-semibold">{product?.name}</h1>
-            <div className="flex gap-[10px]">
+        <div className="product-detail-section-right flex flex-col">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+                <span className="text-sm font-bold text-organic-green bg-organic-green/5 px-3 py-1 rounded-full border border-organic-green/10">
+                    {product?.category}
+                </span>
+                <h1 className="text-[36px] font-black text-gray-800 mt-3 leading-tight">{product?.name}</h1>
+            </div>
+            <div className="flex gap-3">
               {product?.vendor?._id && (
-                 <MessageCircle onClick={() => navigate(`/chat/${product?.vendor?._id}`)} className="text-[22px] cursor-pointer hover:text-indigo-600"/>
+                 <button 
+                    onClick={() => navigate(`/chat/${product?.vendor?._id}`)} 
+                    className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-organic-green/10 hover:text-organic-green transition-all"
+                >
+                    <MessageCircle size={22}/>
+                </button>
               )}
-              <Heart onClick={handleWishlist} className={`text-[22px] cursor-pointer ${wishlist ? "fill-red-600 text-red-600" : ""}`}/>
-              <MdOutlineShare onClick={handleShare} className="text-[22px] cursor-pointer"/>
+              <button 
+                onClick={handleWishlist} 
+                className={`p-3 rounded-full transition-all ${wishlist ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600"}`}
+              >
+                <Heart size={22} className={wishlist ? "fill-current" : ""}/>
+              </button>
+              <button 
+                onClick={handleShare} 
+                className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all"
+              >
+                <MdOutlineShare size={22}/>
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={18} className={i < Math.floor(product?.ratings?.average) ? "fill-yellow-500 text-yellow-500" : "text-gray-300"} />
-            ))}
-            <span className="text-sm text-gray-500">
-              {product?.ratings?.average} ({product?.reviews.length} reviews)
+
+          <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                <Star key={i} size={18} className={i < Math.floor(product?.ratings?.average) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"} />
+                ))}
+            </div>
+            <span className="text-sm font-bold text-gray-400">
+              {product?.ratings?.average || 0} ({product?.reviews?.length || 0} reviews)
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold text-red-500">₹{product?.price}</span>
+          <div className="flex items-baseline gap-2 mb-8">
+            <span className="text-[18px] font-bold text-gray-400">Price:</span>
+            <span className="text-[42px] font-black text-organic-green-dark">₹{product?.price}</span>
           </div>
-          <div
-            style={{ whiteSpace: "pre-line" }}
-            dangerouslySetInnerHTML={{ __html: renderBoldItalic(product?.description || "") }}
-          />
-          <div className="p-3 bg-[#ececf0c0] rounded-md">
-            <div className="flex items-center gap-[10px]">
-              <HiOutlineTruck className="text-[20px]"/>
+
+          <div className="prose prose-sm text-gray-600 mb-8 max-w-none border-t border-gray-100 pt-6">
+            <div
+                className="leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: renderBoldItalic(product?.description || "") }}
+            />
+          </div>
+
+          <div className="p-4 bg-organic-green/5 rounded-2xl border border-organic-green/10 mb-8">
+            <div className="flex items-center gap-4 text-organic-green-dark">
+              <HiOutlineTruck size={28}/>
               <div>
-                <p className="font-medium">Free Delivery on order above ₹499</p>
-                <p className="text-sm text-gray-500">Express delivery for same day</p>
+                <p className="font-bold">Free Delivery on orders above ₹499</p>
+                <p className="text-sm opacity-80 font-medium">Express delivery available for same-day arrival</p>
               </div>
             </div>
           </div>
 
-          <div className="product-detail-section-btns flex items-center justify-between">
-            <div className="flex flex-col gap-[10px]">
-              <p className="text-[14px] text-gray-800">Quantity</p>
-              <div className="flex items-center">
-                <button className="border-[1px] rounded-md w-[30px] relative h-[30px] text-[20px]" onClick={() => setQuantity(Math.max(1, quantity - 1))} ><p className="absolute bottom-[2px] left-[34%]">-</p></button>
-                <span  className="px-8">{quantity}</span>
-                <button className="border-[1px] rounded-md w-[30px] relative h-[30px] text-[20px]" onClick={() => setQuantity(quantity + 1)}><p className="absolute bottom-[2px] left-[25%]">+</p></button>
-              </div>
+          <div className="mt-auto space-y-6 pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center bg-gray-100 rounded-2xl p-1">
+                    <button 
+                        className="w-12 h-12 flex items-center justify-center text-xl font-bold text-gray-600 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm" 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                        -
+                    </button>
+                    <span className="w-16 text-center font-bold text-gray-800 text-lg">{quantity}</span>
+                    <button 
+                        className="w-12 h-12 flex items-center justify-center text-xl font-bold text-gray-600 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm" 
+                        onClick={() => setQuantity(quantity + 1)}
+                    >
+                        +
+                    </button>
+                </div>
+                <div className="text-right">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Price</p>
+                    <p className="text-2xl font-black text-gray-800">₹{(product?.price * quantity).toFixed(2)}</p>
+                </div>
             </div>
-            <button onClick={(e) => {
-                                      if (btn === "Add to Cart") {
-                                        handleAddtoCart(e);
-                                        setPopUp(true);
-                                      } else {
-                                        handleAddtoCart(e);
-                                      }
-                                    }}
-              className="bg-black text-white rounded-md text-[14px] w-[350px] h-[30px]">
-              {btn}
+            
+            <button 
+                onClick={(e) => {
+                    if (btn === "Add to Cart") {
+                        handleAddtoCart(e);
+                        setPopUp(true);
+                    } else {
+                        handleAddtoCart(e);
+                    }
+                }}
+                className={`w-full py-5 rounded-2xl font-black text-lg transition-all shadow-lg active:scale-[0.98] ${btn === "Add to Cart" ? "bg-organic-green text-white hover:bg-organic-green-dark shadow-organic-green/20" : "bg-gray-800 text-white hover:bg-black shadow-black/10"}`}
+            >
+              {btn === "Add to Cart" ? "ADD TO CART" : "VIEW IN CART"}
             </button>
-          </div>
-          <div className="text-sm text-gray-500 mt-2">
-            Total: ₹{(product?.price * quantity).toFixed(2)}
           </div>
         </div>
       </div>
-      <div className="other-details w-[1200px] mt-[70px] relative">
-        <div className="w-fit rounded-xl bg-[#ececf0] p-[5px] flex justify-between mb-[20px]">
-          {
-            ["Detail", "Vendor Info", "Reviews"].map((item, index) => (
-              <div onClick={() => setSelect(index)} key={index} className={`cursor-pointer w-fit px-[10px] font-medium rounded-xl text-[14px] ${select===index ? "bg-white" : "bg-transparent"}`}>{item}</div>
-            ))
-          }
-        </div>
-        {select===0 ? <Detail product={product}/> :
-         select===1 ? <Vendor vendor={product?.vendor?.vendor}/> : 
-         <Reviews product={product} refetch={refetch}/>}
-        <div className="feature-products w-[1200px]">
-            <div className="flex justify-start">
-                <div className="text-[24px] text-black text-center mt-[30px]">
-                    You Might Also Like
-                </div>
+
+      <div className="other-details w-full max-w-7xl mt-16 px-6 relative pb-24">
+        <div className="flex justify-center mb-10">
+            <div className="inline-flex rounded-2xl bg-gray-100 p-1.5 border border-gray-200">
+            {
+                ["Detail", "Vendor Info", "Reviews"].map((item, index) => (
+                <button 
+                    onClick={() => setSelect(index)} 
+                    key={index} 
+                    className={`px-8 py-3 font-bold rounded-xl text-sm transition-all ${select===index ? "bg-white text-organic-green shadow-md" : "text-gray-500 hover:text-organic-green"}`}
+                >
+                    {item}
+                </button>
+                ))
+            }
             </div>
-            <div className="w-full mt-8 flex gap-4 flex-wrap justify-start">
+        </div>
+        
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-16">
+            {select===0 ? <Detail product={product}/> :
+             select===1 ? <Vendor vendor={product?.vendor?.vendor}/> : 
+             <Reviews product={product} refetch={refetch}/>}
+        </div>
+
+        <div className="feature-products border-t border-gray-100 pt-16">
+            <div className="text-center mb-12">
+                <h3 className="text-[28px] font-black text-gray-800">You Might Also Like</h3>
+                <p className="text-gray-500 mt-2">Recommended fresh produce from nearby farms</p>
+            </div>
+            <div className="w-full flex gap-6 flex-wrap justify-center">
                 {
-                    (mlprd?.recommendations && mlprd?.recommendations.slice(0, 10).map((product, index) => {
+                    mlprd?.recommendations?.slice(0, 4).map((product, index) => {
                         return <ProductShow key={index} product={product} />
-                    }))
+                    })
                 }
             </div>
         </div>

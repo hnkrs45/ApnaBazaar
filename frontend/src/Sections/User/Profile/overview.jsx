@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import {useQuery} from "@tanstack/react-query"
 import "./profile.css"
 
-const Overview = ({user}) => {
+const Overview = () => {
     const navigate = useNavigate()
 
     const {data: orders, isLoading} = useQuery({

@@ -8,11 +8,13 @@ const OrderDetail = ({cartItems, priceDetail}) => {
             {
                 cartItems.map((item, index) => {
                     return (
-                        <div key={index} className="grid h-[70px] grid-cols-[15%_65%_10%] items-center gap-[10px] p-[5px] border-2 border-dotted rounded-md">
-                            <img className="w-[60px] h-[60px] rounded-md" src={item?.images[0]} alt="" />
-                            <div className="flex flex-col">
-                                <p>{item?.name}</p>
-                                <p className="text-[#717182]">₹{item?.price} each</p>
+                        <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
+                            <div className="flex gap-2 items-center">
+                                <img className="w-[60px] h-[60px] rounded-md" src={item?.product?.images?.[0] || item?.images?.[0]} alt="" />
+                                <div className="flex flex-col">
+                                    <span className="font-semibold text-[15px]">{item?.product?.name || item?.name}</span>
+                                    <p className="text-[#717182]">₹{item?.price} each</p>
+                                </div>
                             </div>
                             <p>₹{item.price*item?.quantity}</p>
                         </div>
