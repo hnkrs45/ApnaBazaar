@@ -26,13 +26,12 @@ export const Hbody1 = () => {
             <>
           <div className="hero-top-seciton">
             <div className="hero-text hero-section-text text-[42px] text-[#070616]">
-              <div>Fresh Local Products</div>
+              <div>Farm-Fresh Groceries</div>
               <div>Delivered to Your Door</div>
             </div>
             <div className="hero-text text-[20px] mt-6 text-neutral-500 font-xl">
-              Discover the best local vendors in your area. From farm-fresh
-              produce to artisanal crafts, support your community while getting
-              quality products.
+              Discover the best local farms in your area. Get farm-fresh
+              organic produce and dairy delivered straight to your door.
             </div>
             <div className="home-buttons-div flex gap-4 mt-5">
               <div onClick={handleScroll} className="cursor-pointer shopnow-btn h-[35px] w-fit min-w-[140px] bg-black text-white font-semibold flex justify-between px-3 items-center rounded-lg text-[12.25px]">

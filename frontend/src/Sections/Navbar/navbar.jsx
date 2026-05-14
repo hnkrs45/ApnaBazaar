@@ -36,7 +36,7 @@ export const NavBar = () =>{
             (<nav className="navbar-section flex justify-around items-center w-[1200px]">
                 <div className="logo flex items-center">
                     <div>
-                        <NavLink to="/"><div className="font-semibold"><img className="w-[150px]" src="/logo.png" alt="ApnaBazaar" /></div></NavLink>
+                        <NavLink to="/"><div className="font-semibold"><img className="w-[150px]" src="/logo.png" alt="Apna-Bazaar Farm Fresh" /></div></NavLink>
                     </div>
                 </div>
                 <ul className={`options flex gap-8 justify-between cursor-pointer text-[20px]`}>

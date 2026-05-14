@@ -14,11 +14,11 @@ export const FeaturedLocalProducts = () => {
         <div  id="feature-products" className="bg-white mb-[30px] relative flex flex-col items-center">
             <div className="feature-products w-[1200px]">
                 <div className="flex justify-center text-[26.5px] mt-[10px] mb-[14px] font-[500]">
-                    Featured Local Products
+                    Featured Farm-Fresh Groceries
                 </div>
                 <div className="flex justify-center">
                     <div className="text-[14px] text-[#717182] text-center">
-                        Discover fresh, local products from trusted vendors in your community
+                        Discover the freshest organic produce and dairy directly from local farms
                     </div>
                 </div>
                 <div className="w-full mt-8 flex gap-4 flex-wrap justify-center">
@@ -32,11 +32,11 @@ export const FeaturedLocalProducts = () => {
         <div  id="feature-products" className="bg-white mb-[30px] relative flex flex-col items-center">
             <div className="feature-products w-[1200px]">
                 <div className="flex justify-center text-[26.5px] mt-[10px] mb-[14px] font-[500]">
-                    Featured Local Products
+                    Featured Farm-Fresh Groceries
                 </div>
                 <div className="flex justify-center">
                     <div className="text-[14px] text-[#717182] text-center">
-                        Discover fresh, local products from trusted vendors in your community
+                        Discover the freshest organic produce and dairy directly from local farms
                     </div>
                 </div>
                 <div className="w-full mt-8 flex gap-4 flex-wrap justify-center">

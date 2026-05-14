@@ -97,7 +97,7 @@ export const CategoryBody = () => {
       <div className="category-section-start mt-[100px] w-[90vw] flex justify-between items-end justify-self-start relative">
           <div>
               <div className="text-[31.5px] font-semibold pt-4">Categories</div>
-              <div className="text-[14px] text-[#717182] py-3">Browse our complete selection of local products organized by category</div>
+              <div className="text-[14px] text-[#717182] py-3">Browse our complete selection of farm-fresh groceries organized by category</div>
           </div>
           <div className="category-section-items flex items-center gap-4 justify-start">
               <div className="flex gap-[10px] items-center">
