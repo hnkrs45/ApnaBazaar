@@ -56,10 +56,14 @@ export default function SignupForm() {
       return await signup(userData);
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+
     if (!isValidEmail(formData.email)){
       setCheck(true);
       setTimeout(() => {
@@ -71,6 +75,12 @@ export default function SignupForm() {
       alert("don't use your extra brain, just fill the form and continue")
       return;
     }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("Passwords do not match");
+      return;
+    }
+
     const {email, phone, password, subscribe} = formData;
     const sendData = {
       name: formData.firstName + " " + formData.lastName,
@@ -79,19 +89,30 @@ export default function SignupForm() {
       password,
       subscribe
     }
-    sendUserData(sendData);
-    navigate('/signin')
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
-      agree: false,
-      subscribe: true,
-    })
+    
+    try {
+      const response = await sendUserData(sendData);
+      if (response?.data?.success) {
+        navigate('/signin');
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          password: "",
+          confirmPassword: "",
+          agree: false,
+          subscribe: true,
+        });
+      } else {
+        setErrorMessage(response?.data?.message || "Registration failed");
+      }
+    } catch (error) {
+      setErrorMessage("An unexpected error occurred. Please try again.");
+      console.error(error);
+    }
   };
+
   const responseGoogle = async (authResult) => {
     try {
       if (authResult['code']){
@@ -100,17 +121,23 @@ export default function SignupForm() {
         if (res?.data?.success){
           return navigate("/");
         }
-        setErrorMessage("Login Error From google")
+        setErrorMessage(res?.data?.message || "Login Error From google")
       }
     } catch (error) {
       console.error("Error while logging in with Google: ", error.message);
+      setErrorMessage("Error while logging in with Google");
     }
   }
+
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: responseGoogle,
-    onError: responseGoogle,
+    onError: (error) => {
+      console.error("Google Login Error:", error);
+      setErrorMessage("Google Login failed");
+    },
     flow: "auth-code"
   })
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 rounded-lg">
@@ -220,7 +247,7 @@ export default function SignupForm() {
 
           {/* Social Buttons */}
           <div className="flex gap-3">
-            <button onClick={handleGoogleLogin} className="flex-1 flex items-center justify-center text-[14px] gap-2 border rounded-md h-[30px] hover:bg-gray-50">
+            <button type="button" onClick={handleGoogleLogin} className="flex-1 flex items-center justify-center text-[14px] gap-2 border rounded-md h-[30px] hover:bg-gray-50">
               <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="w-5 h-5"/>
               Google
             </button>

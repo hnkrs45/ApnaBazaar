@@ -7,27 +7,42 @@ import { sendVendorApplicationMail, sendVerificationMail } from "../emails/sendM
 import PRODUCT from "../models/product.js";
 
 export const signup = async (req,res) => {
-    const {name, email, phone, password} = req.body;
-    const user = await USER.findOne({email});
-    if (user){
-        return res.json({message: "This Email already registered"})
+    try {
+        const {name, email, phone, password} = req.body;
+        const user = await USER.findOne({email});
+        if (user){
+            return res.json({success: false, message: "This Email already registered"})
+        }
+        const saltround = 11;
+        const hashedpass = await bcrypt.hash(password, saltround);
+        const verificationToken =  Math.floor(100000 + Math.random() * 900000)
+        const verificationTokenExpiry = Date.now() + 15*60*1000 // 15 min
+        
+        const newUser = await USER.create({
+            name,
+            email,
+            phone,
+            password: hashedpass,
+            verificationToken,
+            verificationTokenExpiry,
+            authProvider: "local",
+            role: "customer"
+        })
+
+        const token = setuserandcookies(res, newUser)
+        
+        try {
+            await sendVerificationMail(email, verificationToken);
+        } catch (mailError) {
+            console.error("Error sending verification mail:", mailError);
+            // We still registered the user, but mail failed.
+        }
+
+        return res.json({success: true, message: "user registered successfully", user: {name, email, phone, role: newUser.role}, token});
+    } catch (error) {
+        console.error("Signup error:", error);
+        res.status(500).json({success: false, message: error.message});
     }
-    const saltround = 11;
-    const hashedpass = await bcrypt.hash(password, saltround);
-    const verificationToken =  Math.floor(100000 + Math.random() * 900000)
-    const verificationTokenExpiry = Date.now() + 15*60*60*1000 // 15 min
-    const token = setuserandcookies(res, {name, email})
-    await USER.create({
-        name,
-        email,
-        phone,
-        password: hashedpass,
-        verificationToken,
-        verificationTokenExpiry,
-        authProvider: "local"
-    })
-    await sendVerificationMail(email, verificationToken);
-    return res.json({success: true, message: "user registered successfully", user: {name, email, phone}, token});
 }
 
 export const login = async (req,res) => {
@@ -79,28 +94,32 @@ export const verify = (req,res) => {
 }
 
 export const googleLogin = async (req,res) => {
-    const {code} = req.query;
-    const googleres = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(googleres.tokens);
-    const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`);
-    const {email, name } = userRes.data;
-    let user = await USER.findOne({email});
-    if (!user){
-        const newUser = await USER.create({
-            email,
-            name,
-            authProvider: "google",
-            isVerified: true,
-        });
-        user = newUser;
+    try {
+        const {code} = req.query;
+        if (!code) {
+            return res.status(400).send({success: false, message: "Authorization code is missing"});
+        }
+        const googleres = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(googleres.tokens);
+        const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`);
+        const {email, name } = userRes.data;
+        let user = await USER.findOne({email});
+        if (!user){
+            const newUser = await USER.create({
+                email,
+                name,
+                authProvider: "google",
+                isVerified: true,
+                role: "customer"
+            });
+            user = newUser;
+        }
+        const token = setuserandcookies(res, user);
+        res.send({success: true, user: {email, name, token, role: user.role}})
+    } catch (error) {
+        console.error("Error while authenticating user: ", error.message);
+        res.status(500).send({success: false, message: "Error while authenticating user", error: error.message});
     }
-    const token = setuserandcookies(res, user);
-    res.send({success: true,user: {email,name,token}})
-    // try {
-    // } catch (error) {
-    //     console.log("Error while authenticating user: ", error.message);
-    //     res.send({success: false, message: "Error while authenticating user: ", error: error.message});
-    // }
 }
 
 export const authCheck = async (req,res) => {
@@ -153,14 +172,14 @@ export const deleteWishlist = async (req,res) => {
 
 export const logout = (req,res) => {
     try{
-        res.clearCookie("token", {
-            // httpOnly: true,
-            // secure: false,
-            // sameSite: "lax",
+        const isProduction = process.env.NODE_ENV === "production";
+        const cookieOptions = {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-        });
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+        };
+        res.clearCookie("token", cookieOptions);
+        res.clearCookie("admin_token", cookieOptions);
         res.status(200).json({ message: "Logout successful" , success: true});
     } catch (err) {
         res.status(500).json({ message: err.message , success: false});

@@ -4,25 +4,23 @@ import USER from "../models/user.js"
 export const setuserandcookies = (res, user) => {
     const payload = {
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role || "customer"
     }
     const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn: '7d'})
-    console.log(user?.role)
-    if (user?.role === "customer" || user?.role === "vendor"){
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-    }
+    
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    };
+
     if (user?.role === "Admin"){
-        res.cookie("admin_token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+        res.cookie("admin_token", token, cookieOptions);
+    } else {
+        res.cookie("token", token, cookieOptions);
     }
     return token
 }

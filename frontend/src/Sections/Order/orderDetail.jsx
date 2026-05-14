@@ -1,6 +1,8 @@
 import "./checkout.css"
+import { useLanguage } from "../../services/LanguageContext"
 
 const OrderDetail = ({cartItems, priceDetail}) => {
+  const { language } = useLanguage();
   return (
     <>
         <div className="orderdetail sticky top-[50px] bg-white border-2 w-[500px] flex flex-col gap-[20px] p-[20px] h-fit rounded-md">
@@ -12,7 +14,7 @@ const OrderDetail = ({cartItems, priceDetail}) => {
                             <div className="flex gap-2 items-center">
                                 <img className="w-[60px] h-[60px] rounded-md" src={item?.product?.images?.[0] || item?.images?.[0]} alt="" />
                                 <div className="flex flex-col">
-                                    <span className="font-semibold text-[15px]">{item?.product?.name || item?.name}</span>
+                                    <span className="font-semibold text-[15px]">{item?.product?.name?.[language] || item?.product?.name?.en || item?.name?.[language] || item?.name?.en || item?.name}</span>
                                     <p className="text-[#717182]">₹{item?.price} each</p>
                                 </div>
                             </div>

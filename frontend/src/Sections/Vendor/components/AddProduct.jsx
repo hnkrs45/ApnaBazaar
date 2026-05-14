@@ -15,7 +15,18 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProduct((prev) => ({ ...prev, [name]: value }));
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setProduct((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setProduct((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // Upload images to cloudinary
@@ -54,8 +65,8 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
     e.preventDefault();
 
     // Form Validation
-    if (!product.name.trim()) {
-      return Swal.fire({ icon: "error", title: "Error", text: "Product Name is required" });
+    if (!product.name?.en?.trim() || !product.name?.hi?.trim()) {
+      return Swal.fire({ icon: "error", title: "Error", text: "Product Name is required in both English and Hindi" });
     }
     if (!product.price || product.price <= 0) {
       return Swal.fire({ icon: "error", title: "Error", text: "Price must be greater than 0" });
@@ -66,8 +77,8 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
     if (!product.category) {
       return Swal.fire({ icon: "error", title: "Error", text: "Please select a category" });
     }
-    if (!product.description.trim()) {
-      return Swal.fire({ icon: "error", title: "Error", text: "Description is required" });
+    if (!product.description?.en?.trim() || !product.description?.hi?.trim()) {
+      return Swal.fire({ icon: "error", title: "Error", text: "Description is required in both English and Hindi" });
     }
     if (!product.images.length) {
       return Swal.fire({ icon: "error", title: "Error", text: "Please upload at least one image" });
@@ -88,13 +99,14 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
 
         refetch();
         setProduct({
-          name: "",
+          name: { en: "", hi: "" },
           price: "",
           vendor: "",
           stock: "",
+          unit: "Quintal",
           category: "",
           location: "",
-          description: "",
+          description: { en: "", hi: "" },
           images: [],
         });
       } else {
@@ -114,12 +126,13 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
       });
     }
   };
+
   const handleEdit = async (e) => {
     e.preventDefault();
 
     // Form Validation
-    if (!product.name.trim()) {
-      return Swal.fire({ icon: "error", title: "Error", text: "Product Name is required" });
+    if (!product.name?.en?.trim() || !product.name?.hi?.trim()) {
+      return Swal.fire({ icon: "error", title: "Error", text: "Product Name is required in both English and Hindi" });
     }
     if (!product.price || product.price <= 0) {
       return Swal.fire({ icon: "error", title: "Error", text: "Price must be greater than 0" });
@@ -130,8 +143,8 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
     if (!product.category) {
       return Swal.fire({ icon: "error", title: "Error", text: "Please select a category" });
     }
-    if (!product.description.trim()) {
-      return Swal.fire({ icon: "error", title: "Error", text: "Description is required" });
+    if (!product.description?.en?.trim() || !product.description?.hi?.trim()) {
+      return Swal.fire({ icon: "error", title: "Error", text: "Description is required in both English and Hindi" });
     }
     if (!product.images.length) {
       return Swal.fire({ icon: "error", title: "Error", text: "Please upload at least one image" });
@@ -140,8 +153,6 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
     // Submit the product
     const res = await editVendorProduct(product);
     try {
-      console.log(res)
-
       if (res?.data?.success) {
         Swal.fire({
           icon: "success",
@@ -153,13 +164,14 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
 
         refetch();
         setProduct({
-          name: "",
+          name: { en: "", hi: "" },
           price: "",
           vendor: "",
           stock: "",
+          unit: "Quintal",
           category: "",
           location: "",
-          description: "",
+          description: { en: "", hi: "" },
           images: [],
         });
       } else {
@@ -179,63 +191,114 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
       });
     }
   }
-  const options = ["Electronics", "Clothes", "Furniture", "Vehicles", "Other"];
+
+  const options = ["Vegetables", "Fruits", "Dairy & Eggs", "Grains", "Pulses", "Spices", "Other"];
+  const units = ["kg", "Quintal", "Tonne"];
+
   return (
     <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6 mt-[30px] mb-[30px]">
-      <h2 className="text-lg font-semibold mb-4">Add New Product</h2>
+      <h2 className="text-lg font-semibold mb-4">{mode === "add" ? "Add New Product" : "Edit Product"}</h2>
       <form onSubmit={mode==="add" ? handleSubmit : handleEdit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Product Name */}
-        <input
-          type="text"
-          name="name"
-          placeholder="Product Name"
-          value={product.name}
-          onChange={handleChange}
-          className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
-        />
+        
+        {/* Product Name (English) */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Product Name (English)</label>
+          <input
+            type="text"
+            name="name.en"
+            placeholder="e.g. Premium Sharbati Wheat"
+            value={product.name?.en || ""}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          />
+        </div>
+
+        {/* Product Name (Hindi) */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Product Name (Hindi)</label>
+          <input
+            type="text"
+            name="name.hi"
+            placeholder="उदा. प्रीमियम शरबती गेहूं"
+            value={product.name?.hi || ""}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          />
+        </div>
 
         {/* Price */}
-        <input
-          type="number"
-          name="price"
-          placeholder="Price"
-          value={product.price}
-          onChange={handleChange}
-          className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
-        />
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Price (₹)</label>
+          <input
+            type="number"
+            name="price"
+            placeholder="Price"
+            value={product.price}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          />
+        </div>
+
+        {/* Unit */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Unit</label>
+          <select
+            name="unit"
+            value={product.unit || "Quintal"}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          >
+            {
+              units.map((unit, index) => {
+                return <option key={index} value={unit}>{unit}</option>
+              })
+            }
+          </select>
+        </div>
+
+        {/* Category */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Category</label>
+          <select
+            name="category"
+            value={product.category}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          >
+            <option value="">Select Category</option>
+            {
+              options.map((option, index) => {
+                return <option key={index} value={option}>{option}</option>
+              })
+            }
+          </select>
+        </div>
+
+        {/* Stock */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Stock Amount</label>
+          <input
+            type="number"
+            name="stock"
+            placeholder="Stock"
+            value={product.stock}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          />
+        </div>
 
         {/* Location */}
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={product.location}
-          onChange={handleChange}
-          className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
-        />
-
-        <input
-          type="number"
-          name="stock"
-          placeholder="Stock"
-          value={product.stock}
-          onChange={handleChange}
-          className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
-        />
-        {/* Category */}
-        <select
-          name="category"
-          value={product.category}
-          onChange={handleChange}
-          className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
-        >
-          <option value="">Select Category</option>
-          {
-            options.map((option, index) => {
-              return <option key={index} value={option}>{option}</option>
-            })
-          }
-        </select>
+        <div className="flex flex-col gap-1 col-span-2">
+          <label className="text-xs font-bold text-gray-500 ml-1">Farm Location</label>
+          <input
+            type="text"
+            name="location"
+            placeholder="e.g. Sehore, Madhya Pradesh"
+            value={product.location}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+          />
+        </div>
 
         {/* Drag and Drop File Upload */}
         <div
@@ -275,28 +338,44 @@ const AddProductForm = ({setAddProduct, refetch, product, setProduct, mode}) => 
           ))}
         </div>
 
-        {/* Description */}
-        <textarea
-          name="description"
-          placeholder="Product Description (use **bold** or *italic*)"
-          value={product.description}
-          onChange={handleChange}
-          className="col-span-2 border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
-          rows="3"
-        ></textarea>
+        {/* Description (English) */}
+        <div className="col-span-2 flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Description (English)</label>
+          <textarea
+            name="description.en"
+            placeholder="Product Description in English..."
+            value={product.description?.en || ""}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+            rows="3"
+          ></textarea>
+        </div>
+
+        {/* Description (Hindi) */}
+        <div className="col-span-2 flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-500 ml-1">Description (Hindi)</label>
+          <textarea
+            name="description.hi"
+            placeholder="उत्पाद का विवरण हिंदी में..."
+            value={product.description?.hi || ""}
+            onChange={handleChange}
+            className="border rounded-md px-3 py-2 focus:outline-none focus:ring w-full"
+            rows="3"
+          ></textarea>
+        </div>
 
         {/* Buttons */}
         <div className="col-span-2 flex gap-3 mt-2">
           <button
             type="submit"
-            className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800"
+            className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors"
           >
-            {mode==="add" ? "Add Product" : "Edit Product"}
+            {mode==="add" ? "Add Product" : "Save Changes"}
           </button>
           <button
             onClick={() => setAddProduct(false)}
             type="button"
-            className="border px-4 py-2 rounded-md hover:bg-gray-100"
+            className="border px-6 py-2 rounded-md hover:bg-gray-100 transition-colors"
           >
             Cancel
           </button>

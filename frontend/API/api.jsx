@@ -27,7 +27,7 @@ export const signin = (userData) => {
 }
 
 export const googleLogin = (code) => {
-    return api.post(`/api/user/googlelogin?code=${code}`)
+    return api.post(`/api/user/googlelogin?code=${encodeURIComponent(code)}`)
 }
 
 export const authCheck = () => {

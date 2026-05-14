@@ -13,17 +13,17 @@ export const translations = {
       back: "Back to Products"
     },
     hero: {
-      title: "Farm-Fresh Groceries",
-      subtitle: "Delivered to Your Door",
-      description: "Discover the best local farms in your area. Get farm-fresh organic produce and dairy delivered straight to your door.",
-      browse: "Browse Products",
-      startSelling: "Farmer? Start Selling",
+      title: "Direct Farmer-to-Retailer",
+      subtitle: "Marketplace",
+      description: "Connecting local farmers directly with retailers. Buy fresh produce in bulk (Quintals & Tonnes) without middlemen at wholesale prices.",
+      browse: "Browse Bulk Produce",
+      startSelling: "Farmer? Start Selling Bulk",
       vendorDashboard: "Farmer Dashboard",
-      delivery: "Same Day Delivery",
+      delivery: "Bulk Logistics Support",
       quality: "Quality Guaranteed",
-      fresh: "Fresh Daily",
-      happyCustomers: "Happy Customers",
-      localVendors: "Local Farms"
+      fresh: "Fresh from Farm",
+      happyCustomers: "Happy Retailers",
+      localVendors: "Verified Farms"
     },
     categories: {
       title: "Shop Fresh Groceries",
@@ -32,8 +32,10 @@ export const translations = {
       vegetables: "Vegetables",
       fruits: "Fruits",
       dairy: "Dairy & Eggs",
-      pantry: "Pantry",
-      bakery: "Bakery"
+      grains: "Grains",
+      pulses: "Pulses",
+      spices: "Spices",
+      other: "Other"
     },
     farmerGuide: {
       title: "Farmer's Selling Guide",
@@ -105,17 +107,17 @@ export const translations = {
       back: "उत्पादों पर वापस जाएं"
     },
     hero: {
-      title: "खेत से ताज़ा सामान",
-      subtitle: "आपके घर तक पहुँचाया गया",
-      description: "अपने क्षेत्र के सर्वोत्तम स्थानीय खेतों की खोज करें। खेत से ताज़ा जैविक उत्पाद और डेयरी सीधे अपने दरवाजे पर पाएँ।",
-      browse: "उत्पाद देखें",
-      startSelling: "किसान? बेचना शुरू करें",
+      title: "सीधे किसान से रिटेलर तक",
+      subtitle: "मार्केटप्लेस",
+      description: "स्थानीय किसानों को सीधे रिटेलर्स से जोड़ना। बिना बिचौलियों के थोक मूल्य पर ताज़ा उत्पाद (क्विंटल और टन) खरीदें।",
+      browse: "थोक उत्पाद देखें",
+      startSelling: "किसान? थोक में बेचना शुरू करें",
       vendorDashboard: "किसान डैशबोर्ड",
-      delivery: "उसी दिन डिलीवरी",
+      delivery: "थोक रसद सहायता",
       quality: "गुणवत्ता की गारंटी",
-      fresh: "हर दिन ताज़ा",
-      happyCustomers: "खुश ग्राहक",
-      localVendors: "स्थानीय खेत"
+      fresh: "खेत से सीधा",
+      happyCustomers: "खुश रिटेलर्स",
+      localVendors: "सत्यापित खेत"
     },
     categories: {
       title: "ताज़ा किराने का सामान खरीदें",
@@ -123,8 +125,10 @@ export const translations = {
       vegetables: "सब्जियाँ",
       fruits: "फल",
       dairy: "डेयरी और अंडे",
-      pantry: "पेंट्री",
-      bakery: "बेकरी"
+      grains: "अनाज",
+      pulses: "दालें",
+      spices: "मसाले",
+      other: "अन्य"
     },
     farmerGuide: {
       title: "किसान बिक्री गाइड",

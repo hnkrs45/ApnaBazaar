@@ -6,12 +6,12 @@ import USER from "../models/user.js";
 // ✅ Add Product by Vendor
 export const addVendorProduct = async (req, res) => {
   try {
-    const { images, name, price, stock, description, category, location } = req.body;
+    const { images, name, price, stock, unit, description, category, location } = req.body;
 
-    if (!name || !price || !description || !category || !images?.length) {
+    if (!name?.en || !name?.hi || !price || !description?.en || !description?.hi || !category || !images?.length) {
       return res.status(400).json({
         success: false,
-        message: "All required fields must be filled",
+        message: "All required fields (English and Hindi) must be filled",
       });
     }
 
@@ -24,6 +24,7 @@ export const addVendorProduct = async (req, res) => {
       location,
       images,
       stock,
+      unit: unit || "Quintal",
       vendor: req?.user?._id,
     });
 
@@ -47,7 +48,7 @@ export const addVendorProduct = async (req, res) => {
 };
 
 export const editVendorProduct = async (req ,res) => {
-  const {id, images, name, price, stock, description, category, location} = req.body;
+  const {id, images, name, price, stock, unit, description, category, location} = req.body;
 
   try {
     const product = await PRODUCT.findById(id)
@@ -58,6 +59,7 @@ export const editVendorProduct = async (req ,res) => {
     product.name = name
     product.price = price
     product.stock = stock
+    product.unit = unit || product.unit
     product.description = description
     product.category = category
     product.location = location

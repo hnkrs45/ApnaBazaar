@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, Truck, CheckCircle, Package } from "lucide-react";
 import { getOrderById } from "../../../API/api";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../../services/LanguageContext";
 
 export default function TrackOrder() {
-    const {orderId} = useParams();
+    const { orderId } = useParams();
+    const { language } = useLanguage();
     const navigate = useNavigate();
     const {data, isLoading} = useQuery({
         queryKey: ["order"],
@@ -137,11 +139,13 @@ export default function TrackOrder() {
               <div className="flex items-center space-x-4">
                 <img
                   src={item?.product?.images?.[0] || item?.images?.[0]}
-                  alt={item?.name}
+                  alt={item?.product?.name?.[language] || item?.product?.name?.en || item?.name?.[language] || item?.name?.en || item?.name}
                   className="w-16 h-16 rounded-lg object-cover"
                 />
                 <div>
-                  <h4 className="font-medium text-gray-800">{item?.name}</h4>
+                  <h4 className="font-medium text-gray-800">
+                    {item?.product?.name?.[language] || item?.product?.name?.en || item?.name?.[language] || item?.name?.en || item?.name}
+                  </h4>
                   <p className="text-sm text-gray-500">{item?.category}</p>
                   <p className="text-sm text-gray-600">Quantity: {item?.quantity} × ₹{item?.product?.price}</p>
                 </div>

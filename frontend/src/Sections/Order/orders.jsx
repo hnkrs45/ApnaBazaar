@@ -7,8 +7,10 @@ import { FaChevronDown } from "react-icons/fa";
 import {useQuery} from "@tanstack/react-query"
 import OrdersSkeleton from "./Skeletons/ordersSkeleton";
 import {NavLink} from "react-router-dom"
+import { useLanguage } from "../../services/LanguageContext"
 
 const Orders = ({user}) => {
+    const { language } = useLanguage();
     const [filter, setFilter] = useState("All")
     const [year, setYear] = useState("2025")
 
@@ -96,7 +98,7 @@ const Orders = ({user}) => {
                                 {
                                     order?.items?.map((item, idx) => (
                                         <div key={idx} className="w-16 h-16 rounded-2xl bg-gray-50 p-1.5 border border-gray-100 overflow-hidden">
-                                            <img src={item?.product?.images?.[0]} alt={item?.product?.name} className="w-full h-full object-contain" />
+                                            <img src={item?.product?.images?.[0]} alt={item?.product?.name?.[language] || item?.product?.name?.en || item?.product?.name} className="w-full h-full object-contain" />
                                         </div>
                                     ))
                                 }

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { searchProduct } from "../../../API/api";
 import { userSearchMl } from "../../../API/ml";
+import { useLanguage } from "../../services/LanguageContext";
 import { ProductShow } from "../Home/Components/productshow";
 import ProductSkeleton from "../Home/Skeleton/ProductSkeleton";
 import "./productdetail.css";
@@ -11,6 +12,7 @@ const Search = () => {
     const [searchParams] = useSearchParams();
     const name = searchParams.get('name') || "";
     const location = searchParams.get('location') || "";
+    const { language } = useLanguage();
     const [selected, setSelected] = useState('name');
     
     const {data, isLoading} = useQuery({
@@ -48,9 +50,11 @@ const Search = () => {
     console.log("ml products", mlprd)
 
     if (selected === 'name') {
-        products = [...products].sort((a, b) =>
-        a.name.localeCompare(b.name) // A-Z
-        );
+        products = [...products].sort((a, b) => {
+            const nameA = a.name?.[language] || a.name?.en || a.name || "";
+            const nameB = b.name?.[language] || b.name?.en || b.name || "";
+            return nameA.localeCompare(nameB);
+        });
     } else if (selected === 'date') {
         products = [...products].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // Newest first

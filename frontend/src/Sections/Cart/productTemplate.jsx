@@ -1,9 +1,11 @@
 import { useContext } from "react"
 import { FaMinus, FaPlus, FaTrash } from "react-icons/fa6"
 import { CartProductContext } from "../../services/context"
+import { useLanguage } from "../../services/LanguageContext"
 
 export const ProductTemplate = ({item}) => {
     const {cartItems, setCartItems} = useContext(CartProductContext)
+    const { language } = useLanguage();
 
     const updateQuantity = (productId, newQty) => {
         setCartItems(prevCart =>
@@ -28,17 +30,17 @@ export const ProductTemplate = ({item}) => {
   return (
     <>
         <div className="flex items-center justify-between border border-gray-200 rounded-lg p-3 w-full">
-            <img src={item?.images[0]} alt={item?.name} className="w-14 h-14 object-cover rounded-md"/>
+            <img src={item?.images[0]} alt={item?.name?.[language] || item?.name?.en || item?.name} className="w-14 h-14 object-cover rounded-md"/>
             <div className="flex flex-col flex-1 ml-3">
-                <div className="font-semibold">{item?.name}</div>
+                <div className="font-semibold">{item?.name?.[language] || item?.name?.en || item?.name}</div>
                 <div className="text-sm text-blue-500">{item?.store}</div>
-                <div className="font-bold mt-1">₹{item?.price?.toFixed(2)}</div>
+                <div className="font-bold mt-1">₹{item?.price?.toFixed(2)} / {item?.unit || "Quintal"}</div>
             </div>
             <div className="flex items-center gap-2">
                 <button onClick={() => onDecrease(item)} className={`border border-gray-300 rounded p-1 text-sm`} disabled={item.quantity===1 ? true : false}>
                     <FaMinus className={`${item.quantity===1 ? "text-[#f3f3f5]" : "text-black"}`} size={12} />
                 </button>
-                <span>{item?.quantity}</span>
+                <span>{item?.quantity} {item?.unit || "Quintal"}</span>
                 <button onClick={() => onIncrease(item)} className="border border-gray-300 rounded p-1 text-sm">
                     <FaPlus size={12} />
                 </button>

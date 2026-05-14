@@ -10,7 +10,7 @@ import { useSearchParams } from "react-router-dom";
 
 export const CategoryBody = () => {
   const { loadinguser } = useContext(CartProductContext);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState('name');
   const [category, setCategory] = useState(searchParams.get("category") || "All Products");
@@ -75,9 +75,11 @@ export const CategoryBody = () => {
   if (isError) return <p>Error: {error.message}</p>;
 
   if (selected === 'name') {
-    products = [...products].sort((a, b) =>
-      a.name.localeCompare(b.name) // A-Z
-    );
+    products = [...products].sort((a, b) => {
+      const nameA = a.name?.[language] || a.name?.en || a.name || "";
+      const nameB = b.name?.[language] || b.name?.en || b.name || "";
+      return nameA.localeCompare(nameB);
+    });
   } else if (selected === 'date') {
     products = [...products].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // Newest first

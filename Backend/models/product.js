@@ -2,13 +2,12 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
     name: {
-        type: String,
-        required: [true, "Product name is required"],
-        trim: true
+        en: { type: String, required: [true, "English product name is required"] },
+        hi: { type: String, required: [true, "Hindi product name is required"] }
     },
     description: {
-        type: String,
-        required: [true, "Product description is required"]
+        en: { type: String, required: [true, "English description is required"] },
+        hi: { type: String, required: [true, "Hindi description is required"] }
     },
     price: {
         type: Number,
@@ -42,6 +41,11 @@ const productSchema = new mongoose.Schema({
     stock: {
         type: Number,
         min: 0
+    },
+    unit: {
+        type: String,
+        enum: ["kg", "Quintal", "Tonne"],
+        default: "Quintal"
     },
     vendor: {
         type: mongoose.Schema.Types.ObjectId,

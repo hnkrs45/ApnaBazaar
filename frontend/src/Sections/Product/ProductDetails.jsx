@@ -19,7 +19,7 @@ import Reviews from "./reviews";
 import Vendor from "./vendor";
 
 const ProductDetails = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {user, cartItems, setCartItems, setCmenu, dataForMl, setDataForMl} = useContext(CartProductContext)
   const [wishlist, setWishlist] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -138,15 +138,12 @@ const ProductDetails = () => {
     }
   };
 
-  console.log("ml products", mlprd)
   const handleWishlist = async () => {
     setWishlist(!wishlist);
     if (user?.wishlist?.includes(Productid)){
-      const res = await deleteWishlist(Productid)
-      console.log(res?.data)
+      await deleteWishlist(Productid)
     } else {
-      const res = await updateWishlist(Productid)
-      console.log(res?.data)
+      await updateWishlist(Productid)
     }
   }
 
@@ -172,9 +169,6 @@ const ProductDetails = () => {
     return html;
   }
 
-  if (mlLoading){
-    return <FavoritesSkeleton/>
-  }
   return (
     <section className="product-detail flex flex-col items-center bg-gray-50/30 min-h-screen">
       <div className="product-detail-section w-full max-w-7xl mt-[100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 p-6 bg-white rounded-3xl shadow-sm border border-gray-100">
@@ -215,7 +209,9 @@ const ProductDetails = () => {
                 <span className="text-sm font-bold text-organic-green bg-organic-green/5 px-3 py-1 rounded-full border border-organic-green/10">
                     {product?.category}
                 </span>
-                <h1 className="text-[36px] font-black text-gray-800 mt-3 leading-tight">{product?.name}</h1>
+                <h1 className="text-[36px] font-black text-gray-800 mt-3 leading-tight">
+                    {product?.name?.[language] || product?.name?.en || product?.name}
+                </h1>
             </div>
             <div className="flex gap-3">
               {product?.vendor?._id && (
@@ -255,12 +251,13 @@ const ProductDetails = () => {
           <div className="flex items-baseline gap-2 mb-8">
             <span className="text-[18px] font-bold text-gray-400">Price:</span>
             <span className="text-[42px] font-black text-organic-green-dark">₹{product?.price}</span>
+            <span className="text-[18px] font-bold text-gray-400">/ {product?.unit || "Quintal"}</span>
           </div>
 
           <div className="prose prose-sm text-gray-600 mb-8 max-w-none border-t border-gray-100 pt-6">
             <div
                 className="leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: renderBoldItalic(product?.description || "") }}
+                dangerouslySetInnerHTML={{ __html: renderBoldItalic(product?.description?.[language] || product?.description?.en || product?.description || "") }}
             />
           </div>
 
@@ -268,8 +265,8 @@ const ProductDetails = () => {
             <div className="flex items-center gap-4 text-organic-green-dark">
               <HiOutlineTruck size={28}/>
               <div>
-                <p className="font-bold">Free Delivery on orders above ₹499</p>
-                <p className="text-sm opacity-80 font-medium">Express delivery available for same-day arrival</p>
+                <p className="font-bold">Bulk Logistics Support Available</p>
+                <p className="text-sm opacity-80 font-medium">Special handling for Quintals and Tonnes</p>
               </div>
             </div>
           </div>
@@ -291,7 +288,8 @@ const ProductDetails = () => {
                         +
                     </button>
                 </div>
-                <div className="text-right">
+                <span className="text-gray-500 font-bold text-lg ml-2">{product?.unit || "Quintal"}</span>
+                <div className="text-right ml-auto">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Price</p>
                     <p className="text-2xl font-black text-gray-800">₹{(product?.price * quantity).toFixed(2)}</p>
                 </div>
@@ -340,7 +338,7 @@ const ProductDetails = () => {
         <div className="feature-products border-t border-gray-100 pt-16">
             <div className="text-center mb-12">
                 <h3 className="text-[28px] font-black text-gray-800">You Might Also Like</h3>
-                <p className="text-gray-500 mt-2">Recommended fresh produce from nearby farms</p>
+                <p className="text-gray-500 mt-2">Recommended bulk produce from nearby farms</p>
             </div>
             <div className="w-full flex gap-6 flex-wrap justify-center">
                 {

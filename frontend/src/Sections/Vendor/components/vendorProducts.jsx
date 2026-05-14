@@ -10,7 +10,7 @@ import "./product.css";
 export default function Products() {
   const [addProduct, setAddProduct] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const {data, isLoading, refetch} = useQuery({
     queryKey: ["product"],
@@ -18,11 +18,11 @@ export default function Products() {
     select: (res) => res?.data || null
   })
   const [product, setProduct] = useState({
-    name: "",
+    name: { en: "", hi: "" },
     price: "",
     stock: "",
     category: "",
-    description: "",
+    description: { en: "", hi: "" },
     images: [],
   });
   const [mode, setMode] = useState("add")
@@ -109,18 +109,25 @@ export default function Products() {
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = (p) => {
     setMode("edit")
     setAddProduct(true)
     setProduct({
-      id: product?._id,
-      name: product?.name,
-      price: product?.price,
+      id: p?._id,
+      name: { 
+        en: p?.name?.en || (typeof p?.name === 'string' ? p?.name : ""), 
+        hi: p?.name?.hi || "" 
+      },
+      price: p?.price,
       vendor: "",
-      stock: product?.stock,
-      category: product?.category,
-      description: product?.description,
-      images: product?.images || [],
+      stock: p?.stock,
+      category: p?.category,
+      unit: p?.unit || "Quintal",
+      description: { 
+        en: p?.description?.en || (typeof p?.description === 'string' ? p?.description : ""), 
+        hi: p?.description?.hi || "" 
+      },
+      images: p?.images || [],
     })
   }
 
@@ -213,12 +220,12 @@ export default function Products() {
                   <div className="w-20 h-20 bg-gray-50 rounded-2xl p-1 border border-gray-100 shrink-0">
                     <img
                         src={p.images?.[0] || ""}
-                        alt={p.name}
+                        alt={p.name?.[language] || p.name?.en || p.name}
                         className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-800 text-base line-clamp-2 leading-tight mb-1">{p.name}</h3>
+                    <h3 className="font-bold text-gray-800 text-base line-clamp-2 leading-tight mb-1">{p.name?.[language] || p.name?.en || p.name}</h3>
                     <p className="text-xs text-gray-500 truncate mb-2">{p?.vendor?.vendor?.companyName}</p>
                     <span className="inline-block px-3 py-1 bg-organic-green/10 text-organic-green font-bold rounded-full text-xs">
                       {p.category}
@@ -309,12 +316,12 @@ export default function Products() {
                         <div className="w-12 h-12 bg-white border border-gray-100 rounded-xl p-1 shrink-0 group-hover:border-organic-green/30 transition-colors">
                             <img
                             src={p.images?.[0] || ""}
-                            alt={p.name}
+                            alt={p.name?.[language] || p.name?.en || p.name}
                             className="w-full h-full object-contain"
                             />
                         </div>
                         <div>
-                        <p className="font-bold text-gray-800 truncate w-48">{p.name}</p>
+                        <p className="font-bold text-gray-800 truncate w-48">{p.name?.[language] || p.name?.en || p.name}</p>
                         </div>
                     </div>
                   </td>

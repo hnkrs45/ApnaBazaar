@@ -3,11 +3,13 @@ import { useContext, useEffect, useState } from "react";
 import { FaIndianRupeeSign, FaPlus } from "react-icons/fa6";
 import { NavLink } from "react-router-dom";
 import { CartProductContext } from "../../../services/context";
+import { useLanguage } from "../../../services/LanguageContext";
 import CartPopup from "../../Product/cartPopUp";
 import '../home.css';
 
 export const ProductShow= ({product}) =>{
     const {cartItems, setCartItems, setDataForMl } = useContext(CartProductContext)
+    const { language } = useLanguage();
     const [popUp, setPopUp] = useState(false);
     const updateQuantity = (productId, newQty) => {
         setCartItems(prevCart =>
@@ -58,7 +60,7 @@ export const ProductShow= ({product}) =>{
         <NavLink className="block no-underline" onClick={handleClickedData} to={`/productdetail/${product.productID || product._id}`}>
             <div className="product-cart-component cursor-pointer border-solid relative border-[1px] border-gray-100 group h-[480px] bg-white w-[256px] rounded-2xl hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <div className="h-[240px] w-full overflow-hidden bg-gray-50">
-                    <img loading="lazy" className="object-cover w-full h-full transition-all group-hover:scale-110 duration-500" src={product?.images?.[0] || ""} alt={product?.name || "Product"} />
+                    <img loading="lazy" className="object-cover w-full h-full transition-all group-hover:scale-110 duration-500" src={product?.images?.[0] || ""} alt={product?.name?.[language] || product?.name?.en || product?.name || "Product"} />
                 </div>
                 <div className="p-4 flex flex-col h-[240px] min-w-0">
                     <div className="flex justify-between items-start mb-2">
@@ -67,7 +69,7 @@ export const ProductShow= ({product}) =>{
                         </div>
                     </div>
                     <h3 className="product-card-title text-[17px] font-bold text-gray-800 leading-snug mb-2">
-                        {product?.name || "Unknown Product"}
+                        {product?.name?.[language] || product?.name?.en || product?.name || "Unknown Product"}
                     </h3>
                     
                     <div className="product-card-component-rating flex items-center gap-1.5 mb-3">
@@ -93,9 +95,12 @@ export const ProductShow= ({product}) =>{
                     </div>
 
                     <div className="mt-auto flex justify-between items-center pt-3 border-t border-gray-50">
-                        <div className="flex items-baseline text-organic-green-dark">
-                            <span className="text-[14px] font-bold mr-0.5">₹</span>
-                            <span className="text-[22px] font-black">{product?.price || 0}</span>
+                        <div className="flex flex-col text-organic-green-dark">
+                            <div className="flex items-baseline">
+                                <span className="text-[14px] font-bold mr-0.5">₹</span>
+                                <span className="text-[22px] font-black">{product?.price || 0}</span>
+                            </div>
+                            <span className="text-[11px] font-bold opacity-70">per {product?.unit || "Quintal"}</span>
                         </div>
                         <div 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddtoCart(product); setPopUp(true) }} 

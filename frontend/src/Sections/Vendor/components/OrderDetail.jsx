@@ -1,7 +1,9 @@
-import { IoMdClose } from "react-icons/io";
 import { useState } from "react";
+import { useLanguage } from "../../../services/LanguageContext";
+import { IoMdClose } from "react-icons/io";
 
 export default function OrderCard({ order, onUpdateStatus, setIsOpenDetail }) {
+  const { language } = useLanguage();
   const [status, setStatus] = useState(order.orderStatus);
 
   const handleStatusChange = () => {
@@ -37,11 +39,11 @@ export default function OrderCard({ order, onUpdateStatus, setIsOpenDetail }) {
           <div key={idx} className="flex items-center gap-4 border rounded-lg p-3 mb-2">
             <img
               src={item.product.images[0]}
-              alt={item.product.name}
+              alt={item.product.name?.[language] || item.product.name?.en || item.product.name}
               className="w-20 h-20 rounded-lg object-cover"
             />
             <div>
-              <p className="font-semibold">{item.product.name}</p>
+              <p className="font-semibold">{item.product.name?.[language] || item.product.name?.en || item.product.name}</p>
               <p>Price: ₹{item.product.price}</p>
               <p>Quantity: {item.quantity}</p>
             </div>

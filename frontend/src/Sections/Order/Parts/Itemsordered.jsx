@@ -1,4 +1,7 @@
+import { useLanguage } from "../../../services/LanguageContext";
+
 export default function Itemsordered({orderData}) {
+  const { language } = useLanguage();
   const getSubtotal = (items) => {
     let subtotal = 0;
     for (let i=0;i<items?.length;i++){
@@ -25,11 +28,11 @@ export default function Itemsordered({orderData}) {
             <div className="flex items-center gap-3">
               <img
                 src={item?.product?.images[0]}
-                alt={item?.product?.name}
+                alt={item?.product?.name?.[language] || item?.product?.name?.en || item?.product?.name}
                 className="w-14 h-14 rounded-md object-cover"
               />
               <div>
-                <p className="font-medium">{item?.product?.name}</p>
+                <p className="font-medium">{item?.product?.name?.[language] || item?.product?.name?.en || item?.product?.name}</p>
                 <p className="text-sm text-gray-500"></p>
                 <p className="text-sm text-gray-600">Quantity: {item?.quantity} &nbsp; {item?.product?.price} each</p>
               </div>
