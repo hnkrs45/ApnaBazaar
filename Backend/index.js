@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3000;
 export const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: ["https://apnabzaar.netlify.app", "https://apnabazaaradmin.netlify.app", "http://localhost:5173", "http://localhost:5174"],
+    origin: ["https://apna-bazaar-o811.vercel.app", "https://apnabzaar.netlify.app", "https://apnabazaaradmin.netlify.app", "http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST"]
   }
 });
@@ -55,7 +55,7 @@ app.use(bodyParser.json());
 app.use(cookieParser())
 
 app.use(cors({
-    origin: ["https://apnabzaar.netlify.app", "https://apnabazaaradmin.netlify.app", "http://localhost:5173", "http://localhost:5174"],
+    origin: ["https://apna-bazaar-o811.vercel.app", "https://apnabzaar.netlify.app", "https://apnabazaaradmin.netlify.app", "http://localhost:5173", "http://localhost:5174"],
     credentials: true
 }));
 
