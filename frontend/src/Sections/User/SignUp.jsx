@@ -247,9 +247,9 @@ export default function SignupForm() {
 
           {/* Social Buttons */}
           <div className="flex gap-3">
-            <button type="button" onClick={handleGoogleLogin} className="flex-1 flex items-center justify-center text-[14px] gap-2 border rounded-md h-[30px] hover:bg-gray-50">
+            <button type="button" onClick={handleGoogleLogin} className="flex-1 flex items-center justify-center text-[14px] font-medium gap-3 border border-gray-300 rounded-md h-[40px] bg-white hover:bg-gray-50 transition-colors shadow-sm">
               <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="w-5 h-5"/>
-              Google
+              <span>Sign up with Google</span>
             </button>
           </div>
           <div className="flex gap-[5px] justify-center">

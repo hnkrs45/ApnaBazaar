@@ -26,7 +26,7 @@ import { VendorDashboard } from "./Sections/Vendor/vendorDashboard";
 import VendorForm from "./Sections/Vendor/vendorForm";
 import { CartProductContext } from "./services/context";
 
-const GOOGLE_CLIENT_ID = "316084868865-6cm9ag49f38mgqp25ttja2i61cbjbl6l.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const GoogleAuthWrapper = ({ children }) => (
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
