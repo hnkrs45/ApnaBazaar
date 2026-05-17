@@ -224,12 +224,12 @@ export default function Products() {
                     />
                   </div>
                   <img
-                    src={p.images[0]}
-                    alt={p.name}
+                    src={p.images?.[0] || ""}
+                    alt={p.name?.en || p.name}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
                   <div className="flex-1">
-                    <h3 className="font-medium text-sm">{p.name}</h3>
+                    <h3 className="font-medium text-sm">{p.name?.en || p.name}</h3>
                     <p className="text-xs text-gray-500">{p?.vendor?.vendor?.companyName ? p?.vendor?.vendor?.companyName : "Apnabazaar"}</p>
                     <span className="inline-block mt-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
                       {p.category}
@@ -314,12 +314,12 @@ export default function Products() {
                   </td>
                   <td className="p-3 flex items-center gap-3">
                     <img
-                      src={p.images[0]}
-                      alt={p.name}
+                      src={p.images?.[0] || ""}
+                      alt={p.name?.en || p.name}
                       className="w-12 h-12 rounded-lg object-cover"
                     />
                     <div>
-                      <p className="font-medium truncate w-48">{p.name}</p>
+                      <p className="font-medium truncate w-48">{p.name?.en || p.name}</p>
                       <p className="text-xs text-gray-500">{p?.vendor?.vendor?.companyName ? p?.vendor?.vendor?.companyName : "Apnabazaar"}</p>
                     </div>
                   </td>

@@ -40,8 +40,8 @@ export const CreateOrder =  async (req, res) => {
         }));
         OrderData = {
           ...OrderData,
-          paymentStatus: 'pending',
-          orderStatus: 'processing',
+          paymentStatus: 'Pending',
+          orderStatus: 'Processing',
           totalAmount,
         }
         const newOrderData = {
@@ -53,6 +53,11 @@ export const CreateOrder =  async (req, res) => {
           paymentMethod: OrderData.paymentMethod,
           paymentStatus: OrderData.paymentStatus,
           orderStatus: OrderData.orderStatus,
+          trackingHistory: [{
+            status: OrderData.orderStatus,
+            timestamp: Date.now(),
+            comment: "Order placed successfully"
+          }],
           totalAmount: OrderData.totalAmount
         }
         const newOrder = new ORDER(newOrderData);
@@ -73,7 +78,7 @@ export const CreateOrder =  async (req, res) => {
             { new: true }
           );
         }
-        await sendOrderConfirmation(OrderData?.user?.email, OrderData.user?.name, newOrderData?.orderId, finalItems, newOrderData?.totalAmount)
+        await sendOrderConfirmation(OrderData?.user?.email, OrderData.user?.name, newOrderData?.orderId, OrderData.items, newOrderData?.totalAmount)
         return res.status(200).json({ success: true,  message: "Order saved successfully", orderid: newOrder._id });
     }
     const orderId = generateOrderId()
@@ -137,6 +142,11 @@ export const verifyPayment =  async (req, res) => {
     paymentMethod: orderData.paymentMethod,
     paymentStatus: orderData.paymentStatus,
     orderStatus: orderData.orderStatus,
+    trackingHistory: [{
+      status: orderData.orderStatus,
+      timestamp: Date.now(),
+      comment: "Payment verified successfully"
+    }],
     totalAmount: orderData.totalAmount
   }
   const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET_KEY);

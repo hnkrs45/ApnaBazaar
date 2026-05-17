@@ -110,6 +110,125 @@ const dummyProducts = [
         images: ["https://images.unsplash.com/photo-1599330101962-e64e52f75d33"],
         stock: 500,
         brand: "Andhra Spice"
+    },
+    {
+        name: {
+            en: "Alphonso Mangoes (Ratnagiri)",
+            hi: "हापुस आम (रत्नागिरी)"
+        },
+        description: {
+            en: "World-famous Ratnagiri Alphonso mangoes. Known for their rich, creamy texture and unique aroma.",
+            hi: "विश्व प्रसिद्ध रत्नागिरी हापुस आम। अपनी समृद्ध, मलाईदार बनावट और अनूठी खुशबू के लिए जाने जाते हैं।"
+        },
+        price: 1200,
+        unit: "kg",
+        category: "Fruits",
+        location: "Ratnagiri, Maharashtra",
+        images: ["https://images.unsplash.com/photo-1553279768-865429fa0078"],
+        stock: 100,
+        brand: "Konkan Fresh"
+    },
+    {
+        name: {
+            en: "Shimla Red Apples",
+            hi: "शिमला लाल सेब"
+        },
+        description: {
+            en: "Crispy and sweet red apples directly from the orchards of Shimla. Grade A quality.",
+            hi: "शिमला के बागों से सीधे कुरकुरे और मीठे लाल सेब। ग्रेड ए गुणवत्ता।"
+        },
+        price: 8500,
+        unit: "Quintal",
+        category: "Fruits",
+        location: "Shimla, HP",
+        images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6bccb"],
+        stock: 40,
+        brand: "Himalayan Harvest"
+    },
+    {
+        name: {
+            en: "Organic Hybrid Tomatoes",
+            hi: "ऑर्गेनिक हाइब्रिड टमाटर"
+        },
+        description: {
+            en: "Firm and juicy hybrid tomatoes. Perfect for bulk retail and kitchen use.",
+            hi: "सख्त और रसीले हाइब्रिड टमाटर। थोक खुदरा और रसोई के उपयोग के लिए बिल्कुल सही।"
+        },
+        price: 2200,
+        unit: "Quintal",
+        category: "Vegetables",
+        location: "Kolar, Karnataka",
+        images: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea"],
+        stock: 150,
+        brand: "Green Valley"
+    },
+    {
+        name: {
+            en: "Fresh Green Spinach (Palak)",
+            hi: "ताज़ा हरा पालक"
+        },
+        description: {
+            en: "Nutrient-rich fresh green spinach leaves. Harvested daily for maximum freshness.",
+            hi: "पोषक तत्वों से भरपूर ताज़ा हरे पालक के पत्ते। अधिकतम ताज़गी के लिए रोज़ाना काटा जाता है।"
+        },
+        price: 30,
+        unit: "kg",
+        category: "Vegetables",
+        location: "Local Farm",
+        images: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb"],
+        stock: 200,
+        brand: "Local Fresh"
+    },
+    {
+        name: {
+            en: "Cavendish Bananas",
+            hi: "कैवेंडिश केला"
+        },
+        description: {
+            en: "Premium quality Cavendish bananas. Sweet and perfectly ripened.",
+            hi: "प्रीमियम गुणवत्ता वाले कैवेंडिश केले। मीठे और पूरी तरह से पके हुए।"
+        },
+        price: 2500,
+        unit: "Quintal",
+        category: "Fruits",
+        location: "Jalgaon, Maharashtra",
+        images: ["https://images.unsplash.com/photo-1571771894821-ad9958a35c47"],
+        stock: 60,
+        brand: "Kisan Group"
+    },
+    {
+        name: {
+            en: "Fresh Cauliflower",
+            hi: "ताज़ा फूलगोभी"
+        },
+        description: {
+            en: "Large, white, and compact cauliflower heads. Directly from the farm.",
+            hi: "बड़ी, सफेद और सघन फूलगोभी। सीधे खेत से।"
+        },
+        price: 1800,
+        unit: "Quintal",
+        category: "Vegetables",
+        location: "Local Farm",
+        images: ["https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3"],
+        stock: 80,
+        brand: "Farm Direct"
+    },
+    {
+        name: {
+            en: "Pomegranate (Bhagwa)",
+            hi: "अनार (भगवा)"
+        },
+        description: {
+            en: "Deep red and juicy Pomegranates. High in antioxidants and vitamins.",
+            hi: "गहरे लाल और रसीले अनार। एंटीऑक्सिडेंट और विटामिन से भरपूर।"
+        },
+        price: 9000,
+        unit: "Quintal",
+        category: "Fruits",
+        location: "Solapur, Maharashtra",
+        images: ["https://images.unsplash.com/photo-1615485290382-441e4d0c9cb5"],
+        stock: 50,
+        brand: "Solar Farms"
     }
 ];
 

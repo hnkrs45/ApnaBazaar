@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { CartProductContext } from "../../services/context";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "../../../API/api";
 import Sidebar from "./sidebar";
 import Dashboard from "./components/dashboard";
@@ -10,17 +10,31 @@ import { Menu, X } from "lucide-react";
 
 export const VendorDashboard = () => {
   const [selectedField, setSelectedField] = useState("dashboard")
-  const { checkAuth, loadinguser } = useContext(CartProductContext);
+  const { checkAuth, loadinguser, user } = useContext(CartProductContext);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab && ["dashboard", "products", "orders"].includes(tab)) {
+      setSelectedField(tab);
+    }
+  }, [location]);
 
   useEffect(() => {
     console.log(loadinguser)
     if(loadinguser) return
     if (!checkAuth){
       navigate("/signin")
+      return;
     }
-  },[checkAuth, navigate, loadinguser])
+    if (user?.vendor?.status !== "Active") {
+      navigate("/vendor/form");
+    }
+  },[checkAuth, navigate, loadinguser, user])
+
 
 
   const handleLogout = async () => {

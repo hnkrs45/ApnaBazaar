@@ -1,13 +1,14 @@
 import { X, Mail, Phone, MapPin, Package, Star, IndianRupee, Calendar, FileText } from "lucide-react";
 import { approveVendor } from "../../API/product";
 
-export default function VendorDetailsModal({ vendor, isOpen, onClose }) {
+export default function VendorDetailsModal({ vendor, isOpen, onClose, refetch }) {
   if (!isOpen || !vendor) return null;
     const handleApprove = async () => {
         try {
             const res = await approveVendor(vendor._id)
             if (res.data.success){
                 alert("Vendor is Now Approved")
+                refetch();
                 onClose();
             }
             else alert("Something went wrong")
@@ -48,12 +49,12 @@ export default function VendorDetailsModal({ vendor, isOpen, onClose }) {
           </div>
           <div>
             <Star className="mx-auto text-yellow-500" />
-            <p className="font-semibold">{vendor?.vendor?.rating}</p>
-            <p className="text-sm text-gray-500">{vendor.reviews} Reviews</p>
+            <p className="font-semibold">{vendor?.rating ?? 0}</p>
+            <p className="text-sm text-gray-500">{vendor.reviews ?? 0} Reviews</p>
           </div>
           <div>
             <IndianRupee className="mx-auto text-green-500" />
-            <p className="font-semibold">₹{vendor?.vendor?.totalSales}</p>
+            <p className="font-semibold">₹{vendor?.vendor?.totalRevenue ?? 0}</p>
             <p className="text-sm text-gray-500">Total Sales</p>
           </div>
           <div>

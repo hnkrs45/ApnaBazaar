@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Edit, LogOut } from "lucide-react";
+import { Edit, LogOut, Store } from "lucide-react";
 import {CartProductContext} from "../../../services/context"
 import Overview from "./overview";
 import PersonalInfo from "./personal";
@@ -42,9 +42,14 @@ const Profile = () => {
               Manage your account settings and preferences
             </p>
           </div>
-          <button onClick={handleLogout} className={`signOut-btn items-center gap-2 px-4 py-2 rounded-lg text-red-500 border border-red-300 hover:bg-red-100 transition ${user ? "flex" : "hidden"}`}>
-            <LogOut className="logout-icon" size={18} /> Sign Out
-          </button>
+          <div className="profile-actions flex items-center gap-3">
+            <button onClick={() => navigate("/sell")} className={`sell-btn items-center gap-2 px-4 py-2 rounded-lg text-organic-green border border-organic-green/30 hover:bg-organic-green/10 transition ${user ? "flex" : "hidden"}`}>
+              <Store className="sell-icon" size={18} /> Sell on ApnaBazaar
+            </button>
+            <button onClick={handleLogout} className={`signOut-btn items-center gap-2 px-4 py-2 rounded-lg text-red-500 border border-red-300 hover:bg-red-100 transition ${user ? "flex" : "hidden"}`}>
+              <LogOut className="logout-icon" size={18} /> Sign Out
+            </button>
+          </div>
         </div>
 
         <div className="profile-section-box bg-white shadow rounded-xl p-6 flex justify-between items-center mb-6">

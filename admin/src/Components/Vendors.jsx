@@ -8,7 +8,7 @@ export default function Vendors() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [expandedVendor, setExpandedVendor] = useState(null);
-  const {data, isLoading} = useQuery({
+  const {data, isLoading, refetch} = useQuery({
     queryKey: ["vendors"],
     queryFn: getVendors,
     select: (res) => res?.data || null
@@ -42,6 +42,7 @@ export default function Vendors() {
         vendor={selectedVendor}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        refetch={refetch}
       />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
@@ -89,7 +90,7 @@ export default function Vendors() {
         <div className="p-3 sm:p-4 rounded-xl border bg-white shadow col-span-2 sm:col-span-1">
           <p className="text-gray-500 text-xs sm:text-sm">Total Products</p>
           <p className="text-lg sm:text-xl md:text-2xl font-bold">
-            {vendors?.reduce((sum, v) => sum + v?.products, 0)}
+            {vendors?.reduce((sum, v) => sum + (v?.vendor?.products?.length || 0), 0)}
           </p>
         </div>
       </div>

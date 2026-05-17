@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Bell, Settings, LogOut, Plus, Eye, Edit, Trash, Menu, X, Cross } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Bell, Settings, Plus, Eye, Edit, Trash, HelpCircle, Info } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getVendorProducts, removeVendorProduct } from "../../../../API/api";
 import AddProductForm from "./AddProduct";
 import Swal from "sweetalert2";
@@ -8,6 +8,7 @@ import { useLanguage } from "../../../services/LanguageContext";
 import "./product.css";
 
 export default function Products() {
+  const queryClient = useQueryClient();
   const [addProduct, setAddProduct] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const { t, language } = useLanguage();
@@ -68,6 +69,8 @@ export default function Products() {
         }
         Swal.fire("Deleted!", "Selected products have been deleted.", "success");
         setSelectedProducts([]);
+        queryClient.invalidateQueries(["products"]);
+        queryClient.invalidateQueries(["featurePrd"]);
         refetch();
       } catch {
         Swal.fire("Oops!", "Something went wrong.", "error");
@@ -96,6 +99,8 @@ export default function Products() {
           timer: 2000,
           showConfirmButton: false,
         });
+        queryClient.invalidateQueries(["products"]);
+        queryClient.invalidateQueries(["featurePrd"]);
         refetch();
       } else {
         Swal.fire({
@@ -136,7 +141,30 @@ export default function Products() {
       <div className="flex-1 w-full p-6 md:p-10 overflow-x-hidden products-content">
         {/* Top Bar */}
         <div className="products-desktop-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 w-full">
-          <h2 className="products-title text-[32px] font-black text-gray-800">{t('vendorHub.productsMgmt')}</h2>
+          <div className="flex items-center gap-3 group relative">
+            <h2 className="products-title text-[32px] font-black text-gray-800">{t('vendorHub.productsMgmt')}</h2>
+            <div className="relative group/guide">
+                <HelpCircle className="w-6 h-6 text-organic-green cursor-help hover:scale-110 transition-transform" />
+                {/* Guide Popover */}
+                <div className="absolute left-0 top-10 w-[280px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 opacity-0 invisible group-hover/guide:opacity-100 group-hover/guide:visible transition-all z-50">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Info className="w-5 h-5 text-organic-green" />
+                        <h4 className="font-bold text-gray-800">{t('productGuide.title')}</h4>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed mb-4">{t('productGuide.desc')}</p>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <div className="w-1.5 h-1.5 rounded-full bg-organic-green"></div>
+                            <span>{t('productGuide.stock')}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <div className="w-1.5 h-1.5 rounded-full bg-organic-green"></div>
+                            <span>{t('productGuide.price')}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
           <div className="flex gap-3 items-center hidden sm:flex">
             <button className="p-3 bg-white border border-gray-200 text-gray-600 rounded-2xl hover:text-organic-green hover:border-organic-green hover:shadow-sm transition-all">
               <Bell className="w-5 h-5" />
@@ -159,13 +187,17 @@ export default function Products() {
               {products.filter((p) => p.stock > 0).length}
             </p>
           </div>
-          <div className="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group relative">
             <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-2">{t('vendorHub.outOfStock')}</p>
             <p className="products-summary-number text-3xl font-black text-red-500">
               {products.filter((p) => p.stock <= 0).length}
             </p>
+            {/* Contextual Guide */}
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                {t('productGuide.stock')}
+            </div>
           </div>
-          <div className="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group relative">
             <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-2">{t('vendorHub.avgPrice')}</p>
             <p className="products-summary-number text-3xl font-black text-gray-800">
               ₹
@@ -173,6 +205,9 @@ export default function Products() {
                 products.reduce((acc, p) => acc + (Number(p.price) || 0), 0) / products.length
               ).toFixed(2) : "0.00"}
             </p>
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                {t('productGuide.price')}
+            </div>
           </div>
         </div>
         {addProduct && <AddProductForm setAddProduct={setAddProduct} refetch={refetch} product={product} setProduct={setProduct} mode={mode} />}
@@ -202,7 +237,7 @@ export default function Products() {
                 }
                 checked={selectedProducts.length > 0 && selectedProducts.length === products.length}
                 />
-                <span className="text-sm font-bold text-gray-500">Select All</span>
+                <span className="text-sm font-bold text-gray-500">{t('vendorHub.selectAll')}</span>
             </div>
           </div>
           <div className="flex flex-col gap-4">
@@ -266,7 +301,7 @@ export default function Products() {
             
             {products.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-                    <p className="text-gray-400 font-bold">No products found</p>
+                    <p className="text-gray-400 font-bold">{t('vendorHub.noProducts')}</p>
                 </div>
             )}
           </div>
@@ -312,7 +347,7 @@ export default function Products() {
                     />
                   </td>
                   <td className="p-5">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 group/prod relative">
                         <div className="w-12 h-12 bg-white border border-gray-100 rounded-xl p-1 shrink-0 group-hover:border-organic-green/30 transition-colors">
                             <img
                             src={p.images?.[0] || ""}
@@ -321,7 +356,11 @@ export default function Products() {
                             />
                         </div>
                         <div>
-                        <p className="font-bold text-gray-800 truncate w-48">{p.name?.[language] || p.name?.en || p.name}</p>
+                            <p className="font-bold text-gray-800 truncate w-48">{p.name?.[language] || p.name?.en || p.name}</p>
+                        </div>
+                        {/* Tooltip for product */}
+                        <div className="absolute left-0 -top-10 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/prod:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                            {t('productGuide.view')}
                         </div>
                     </div>
                   </td>
@@ -351,15 +390,30 @@ export default function Products() {
                   </td>
                   <td className="p-5">
                     <div className="flex justify-center gap-2">
-                        <button className="p-2 text-gray-400 hover:text-organic-green hover:bg-organic-green/10 rounded-xl transition-all">
-                        <Eye className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleEdit(p)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all">
-                        <Edit className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleRemoveItem(p._id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                        <Trash className="w-4 h-4" />
-                        </button>
+                        <div className="relative group/view">
+                            <button className="p-2 text-gray-400 hover:text-organic-green hover:bg-organic-green/10 rounded-xl transition-all">
+                                <Eye className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/view:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                {t('productGuide.view')}
+                            </div>
+                        </div>
+                        <div className="relative group/edit">
+                            <button onClick={() => handleEdit(p)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all">
+                                <Edit className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/edit:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                {t('productGuide.edit')}
+                            </div>
+                        </div>
+                        <div className="relative group/delete">
+                            <button onClick={() => handleRemoveItem(p._id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                                <Trash className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/delete:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                {t('productGuide.delete')}
+                            </div>
+                        </div>
                     </div>
                   </td>
                 </tr>
@@ -367,7 +421,7 @@ export default function Products() {
               {products.length === 0 && (
                 <tr>
                     <td colSpan="7" className="p-8 text-center text-gray-400 font-bold">
-                        No products found
+                        {t('vendorHub.noProducts')}
                     </td>
                 </tr>
               )}
@@ -378,8 +432,8 @@ export default function Products() {
 
       {/* Floating Action Button */}
       <div className="products-fab fixed bottom-8 right-8 z-40 flex items-end group">
-        <div className="products-fab-tooltip w-fit p-2 absolute right-16 bg-gray-800 text-white font-bold rounded-xl mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          <p className="text-xs whitespace-nowrap px-2">{t('vendorHub.addProduct')}</p>
+        <div className="products-fab-tooltip w-fit p-3 absolute right-16 bg-gray-800 text-white font-medium rounded-2xl mb-2 opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-xl border border-white/10">
+          <p className="text-xs whitespace-nowrap px-2">{t('productGuide.addProduct')}</p>
         </div>
         <button 
           onClick={() => setAddProduct(!addProduct)}
@@ -391,3 +445,4 @@ export default function Products() {
     </div>
   );
 }
+

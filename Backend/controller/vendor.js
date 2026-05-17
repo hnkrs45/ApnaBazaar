@@ -167,6 +167,7 @@ export const updateOrderStatus = async (req,res) => {
   try {
     const vendor_id = req?.user?._id;
     const { id, nextStatus } = req.body;
+    const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
 
     if (!id || !nextStatus) {
       return res.status(400).json({
@@ -175,9 +176,43 @@ export const updateOrderStatus = async (req,res) => {
       });
     }
 
+    if (!validStatuses.includes(nextStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status",
+      });
+    }
+
+    const order = await ORDER.findById(id).populate({
+      path: "items.product",
+      model: "Product",
+      select: "vendor",
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    const hasVendorProduct = order.items.some((item) => (
+      item?.product?.vendor?.toString() === vendor_id.toString()
+    ));
+
+    if (!hasVendorProduct) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only update orders containing your products",
+      });
+    }
+
     const updatedOrder = await ORDER.findByIdAndUpdate(
       id,
-      { orderStatus: nextStatus },
+      { 
+        $set: { orderStatus: nextStatus },
+        $push: { trackingHistory: { status: nextStatus, timestamp: Date.now(), comment: `Order status updated to ${nextStatus}` } }
+      },
       { new: true }
     )
       .populate({
@@ -187,14 +222,7 @@ export const updateOrderStatus = async (req,res) => {
       })
       .populate("user", "name email");
 
-    if (!updatedOrder) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
-    }
-
-    const vendor = await USER.findById({_id: vendor_id})
+    const vendor = await USER.findById(vendor_id)
 
     const to = updatedOrder?.shippingAddress?.email
     const name = updatedOrder?.shippingAddress?.name
@@ -204,7 +232,11 @@ export const updateOrderStatus = async (req,res) => {
     if (status==="Delivered"){
       vendor.vendor.totalOrders += 1
       let total = 0
-      updatedOrder?.items?.map((item) => total+=item.price)
+      updatedOrder?.items
+        ?.filter((item) => item?.product?.vendor?.toString() === vendor_id.toString())
+        ?.forEach((item) => {
+          total += item.price * item.quantity;
+        })
       vendor.vendor.totalRevenue += total
     }
 

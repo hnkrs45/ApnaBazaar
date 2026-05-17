@@ -10,6 +10,18 @@
     }
 }
 @media screen and (max-width: 500px) {
+    .profile-actions{
+        width: 100%;
+        justify-content: space-between;
+    }
+    .sell-btn{
+        font-size: 11px;
+        gap: 3px;
+        padding: 5px;
+    }
+    .sell-icon{
+        width: 11px;
+    }
     .signOut-btn{
         font-size: 11px;
         gap: 3px;

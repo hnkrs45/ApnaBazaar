@@ -23,6 +23,7 @@ import Profile from "./Sections/User/Profile/profile";
 import SigninForm from "./Sections/User/Signin";
 import SignupForm from "./Sections/User/SignUp";
 import { VendorDashboard } from "./Sections/Vendor/vendorDashboard";
+import VendorLanding from "./Sections/Vendor/VendorLanding";
 import VendorForm from "./Sections/Vendor/vendorForm";
 import { CartProductContext } from "./services/context";
 
@@ -64,7 +65,9 @@ const App = () => {
   const [items, setItems] = useState(0);
   const [cmenu, setCmenu] = useState(false);
   const location = useLocation();
-  const isSignupPage = ["/signup", "/signin", "/checkout" ,"/vendor/dashboard"].includes(location.pathname);
+  const hideStorefrontChrome = ["/signup", "/signin", "/checkout"].includes(location.pathname)
+    || location.pathname.startsWith("/vendor")
+    || location.pathname === "/sell";
 
   useEffect(() => {
     const sendInteractionData = async () => {
@@ -127,7 +130,7 @@ const App = () => {
         refetch
       }}
     >
-      {!isSignupPage && <NavBar />}
+      {!hideStorefrontChrome && <NavBar />}
       <ScrollToTop />
 
       {isLoading && <p className="text-center py-5">Loading...</p>}
@@ -158,6 +161,7 @@ const App = () => {
         <Route path="/checkout" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Checkout /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Orders user={data?.user} /></ProtectedRoute>} />
         <Route path="productdetail/:Productid" element={<ProductDetails />} />
+        <Route path="/sell" element={<VendorLanding />} />
         <Route path="/vendor/form" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><VendorForm/></ProtectedRoute>} />
         <Route path="/vendor/dashboard" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><VendorDashboard/></ProtectedRoute>} />
         <Route path="/orders/:orderId" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><TrackOrder/></ProtectedRoute>} />
@@ -165,7 +169,7 @@ const App = () => {
         <Route path="/chat/:userId" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Chat/></ProtectedRoute>} />
       </Routes>
 
-      {!isSignupPage && <FooterSection loadinguser={isLoading} />}
+      {!hideStorefrontChrome && <FooterSection loadinguser={isLoading} />}
     </CartProductContext.Provider>
   );
 };

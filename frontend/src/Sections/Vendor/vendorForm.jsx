@@ -1,9 +1,12 @@
 import { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { addVendor } from "../../../API/api";
 import { CartProductContext } from "../../services/context";
 
 export default function VendorForm() {
-    const {user, loadinguser} = useContext(CartProductContext)
+  const {user, loadinguser, refetch} = useContext(CartProductContext)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const [vendor, setVendor] = useState({
     address: "",
@@ -31,11 +34,25 @@ export default function VendorForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+    
+    setIsSubmitting(true);
+    try {
       console.log("Vendor Data: ", vendor);
       const res = await addVendor(vendor);
-      console.log(res);
-    if (res?.data?.success) alert("Application Submitted successfully!");
-    else alert("Something went wrong")
+      console.log("Response:", res);
+      
+      if (res?.data?.success) {
+        alert("Application Submitted successfully!");
+        await refetch(); // Update user role/status in context
+      } else {
+        alert(res?.data?.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert(error.response?.data?.message || "Error submitting application");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   if (loadinguser){
@@ -50,14 +67,38 @@ export default function VendorForm() {
   }
   console.log(user?.role === 'vendor' && user?.vendor?.status === "Pending")
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100">
+      <header className="border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <Link to="/">
+            <img className="w-[140px]" src="/logo.png" alt="ApnaBazaar" />
+          </Link>
+          <Link to="/sell" className="rounded-full border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 hover:border-organic-green hover:text-organic-green">
+            Farmer Portal
+          </Link>
+        </div>
+      </header>
+      <div className="flex justify-center items-center min-h-[calc(100vh-82px)] p-6">
       {user?.role === 'vendor' && user?.vendor?.status === "Pending" ? (
-        <div>
-          <p>Application Under Review</p>
+        <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-md">
+          <h2 className="text-2xl font-black text-gray-900">Application Under Review</h2>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            Your farmer application is waiting for admin approval. Once approved, your dashboard will unlock here.
+          </p>
         </div>
       ) : user?.vendor?.status === "Active" ? (
-        <div>
-          <p>🎉🎉Congratulations, your application is accepted, you are now become a vendor</p>
+        <div className="text-center p-8 bg-white rounded-3xl shadow-xl max-w-md w-full border border-gray-100 flex flex-col items-center">
+          <span className="text-5xl mb-4 animate-bounce">🎉</span>
+          <h2 className="text-2xl font-black text-gray-800 mb-2">Congratulations!</h2>
+          <p className="text-gray-500 mb-6 leading-relaxed">
+            Your application has been accepted. You are now a registered farmer on Apna-Bazaar!
+          </p>
+          <button 
+            onClick={() => navigate("/vendor/dashboard")}
+            className="w-full bg-organic-green hover:bg-organic-green-dark text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+          >
+            Go to Vendor Dashboard
+          </button>
         </div>
       ) : <form
         onSubmit={handleSubmit}
@@ -101,11 +142,13 @@ export default function VendorForm() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition"
+          disabled={isSubmitting}
+          className={`w-full ${isSubmitting ? 'bg-gray-400' : 'bg-black hover:bg-gray-800'} text-white py-2 rounded-md transition`}
         >
-          Apply
+          {isSubmitting ? "Applying..." : "Apply"}
         </button>
       </form>}
+      </div>
     </div>
   );
 }

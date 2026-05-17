@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Filter, CheckCircle, Clock, Package, Eye } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getVendorOrders, updateOrderStatus } from "../../../../API/api";
 import OrderCard from "./OrderDetail";
 import { useLanguage } from "../../../services/LanguageContext";
@@ -12,6 +12,7 @@ const VendorOrders = () => {
   const [isOpenDetail, setIsOpenDetail] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
 
   const {data, isLoading} = useQuery({
     queryKey: [`orders`],
@@ -52,6 +53,8 @@ const VendorOrders = () => {
       const res = await updateOrderStatus({id, nextStatus})
 
       if (res?.data?.success) {
+        setSelectedOrder(res.data.order);
+        await queryClient.invalidateQueries({ queryKey: ["orders"] });
         Swal.fire({
           icon: "success",
           title: "Success!",
@@ -68,12 +71,15 @@ const VendorOrders = () => {
           showConfirmButton: false,
         });
       }
+
+      return res;
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: err.message || "Server error",
+        text: err?.response?.data?.message || err.message || "Server error",
       });
+      return err?.response;
     }
   }
 
@@ -95,7 +101,7 @@ const VendorOrders = () => {
       <div className="mb-8">
         <h2 className="text-[32px] font-black text-gray-800">{t('vendorHub.orders')}</h2>
         <p className="text-gray-500 font-medium mt-1">
-          Track and manage customer orders
+          {t('vendorHub.ordersSubtitle')}
         </p>
       </div>
 
@@ -112,7 +118,7 @@ const VendorOrders = () => {
         </div>
         <div className="p-6 rounded-3xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">Processing</p>
+            <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">{t('vendorHub.processing')}</p>
             <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center">
                 <Clock className="text-yellow-500 w-5 h-5" />
             </div>
@@ -121,7 +127,7 @@ const VendorOrders = () => {
         </div>
         <div className="p-6 rounded-3xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">Shipped</p>
+            <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">{t('vendorHub.shipped')}</p>
             <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
                 <Package className="text-purple-500 w-5 h-5" />
             </div>
@@ -130,7 +136,7 @@ const VendorOrders = () => {
         </div>
         <div className="p-6 rounded-3xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">Delivered</p>
+            <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">{t('vendorHub.delivered')}</p>
             <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
                 <CheckCircle className="text-organic-green w-5 h-5" />
             </div>
@@ -144,7 +150,7 @@ const VendorOrders = () => {
         <div className="flex items-center border border-gray-200 rounded-2xl px-4 py-1 flex-1 bg-white focus-within:border-organic-green focus-within:ring-2 focus-within:ring-organic-green/20 transition-all">
           <Search className="w-5 h-5 text-gray-400 shrink-0" />
           <input
-            placeholder="Search orders, customers..."
+            placeholder={t('vendorHub.searchOrders')}
             className="p-2 w-full outline-none text-sm font-medium bg-transparent"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -156,13 +162,13 @@ const VendorOrders = () => {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             >
-            <option value="All">All Statuses</option>
-            <option value="Processing">Processing</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
+            <option value="All">{t('vendorHub.allStatuses')}</option>
+            <option value="Processing">{t('vendorHub.processing')}</option>
+            <option value="Shipped">{t('vendorHub.shipped')}</option>
+            <option value="Delivered">{t('vendorHub.delivered')}</option>
             </select>
             <button className="flex items-center justify-center gap-2 border border-gray-200 rounded-2xl px-5 py-3 bg-white text-sm font-bold text-gray-600 hover:text-organic-green hover:border-organic-green transition-all">
-            <Filter className="w-4 h-4" /> Filters
+            <Filter className="w-4 h-4" /> {t('vendorHub.filters')}
             </button>
         </div>
       </div>
@@ -172,12 +178,12 @@ const VendorOrders = () => {
         <table className="w-full text-left">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold">
             <tr>
-              <th className="p-5">Order ID</th>
-              <th className="p-5">Customer</th>
-              <th className="p-5">Date</th>
-              <th className="p-5">Status</th>
-              <th className="p-5">Total</th>
-              <th className="p-5 text-center">Actions</th>
+              <th className="p-5">{t('vendorHub.orderId')}</th>
+              <th className="p-5">{t('vendorHub.customer')}</th>
+              <th className="p-5">{t('vendorHub.date')}</th>
+              <th className="p-5">{t('vendorHub.status')}</th>
+              <th className="p-5">{t('vendorHub.total')}</th>
+              <th className="p-5 text-center">{t('vendorHub.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -238,11 +244,11 @@ const VendorOrders = () => {
             
             <div className="flex justify-between items-end pt-2">
                 <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">Total</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase mb-1">{t('vendorHub.total')}</p>
                     <p className="text-lg font-black text-gray-800">₹{o?.totalAmount?.toFixed(2)}</p>
                 </div>
                 <button onClick={() => {setIsOpenDetail(true); setSelectedOrder(o)}} className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-organic-green text-gray-600 hover:text-white rounded-xl transition-colors font-bold text-sm">
-                    <Eye className="w-4 h-4" /> View
+                    <Eye className="w-4 h-4" /> {t('vendorHub.view')}
                 </button>
             </div>
           </div>

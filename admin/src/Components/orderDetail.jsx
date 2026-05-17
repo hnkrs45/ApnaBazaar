@@ -4,14 +4,14 @@ import { useState } from "react";
 export default function OrderCard({ order, onUpdateStatus, setIsOpenDetail }) {
   const [status, setStatus] = useState(order.orderStatus);
 
-  const handleStatusChange = () => {
+  const handleStatusChange = async () => {
     let nextStatus =
       status === "Processing"
         ? "Shipped"
         : status === "Shipped"
         ? "Delivered"
         : "Delivered";
-    const res = onUpdateStatus(order._id, nextStatus);
+    const res = await onUpdateStatus(order._id, nextStatus);
     if (res?.data?.success){
         setStatus(nextStatus);
     }
@@ -36,12 +36,12 @@ export default function OrderCard({ order, onUpdateStatus, setIsOpenDetail }) {
         {order.items.map((item, idx) => (
           <div key={idx} className="flex items-center gap-4 border rounded-lg p-3 mb-2">
             <img
-              src={item.product.images[0]}
-              alt={item.product.name}
+              src={item.product.images?.[0] || ""}
+              alt={item.product.name?.en || item.product.name}
               className="w-20 h-20 rounded-lg object-cover"
             />
             <div>
-              <p className="font-semibold">{item.product.name}</p>
+              <p className="font-semibold">{item.product.name?.en || item.product.name}</p>
               <p>Price: ₹{item.product.price}</p>
               <p>Quantity: {item.quantity}</p>
             </div>
@@ -60,7 +60,7 @@ export default function OrderCard({ order, onUpdateStatus, setIsOpenDetail }) {
             Current Status: <span className="text-blue-600">{status}</span>
           </p>
           <button
-            disabled={order.orderStatus === "Delivered" ? true : false}
+            disabled={status === "Delivered" ? true : false}
             onClick={handleStatusChange}
             className={`px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed`}
           >

@@ -1,6 +1,12 @@
+import { useLanguage } from "../../services/LanguageContext";
+
 const Detail = ({product}) => {
+  const { language } = useLanguage();
 
   function renderBoldItalic(text) {
+    if (typeof text !== "string") {
+      return "";
+    }
     // Replace **bold** with <b>bold</b>
     let html = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
     // Replace *italic* with <i>italic</i>
@@ -38,7 +44,7 @@ const Detail = ({product}) => {
               <h2 className="font-medium mb-[20px]">About this Product</h2>
               <div
                 style={{ whiteSpace: "pre-line" }}
-                dangerouslySetInnerHTML={{ __html: renderBoldItalic(product?.description || "") }}
+                dangerouslySetInnerHTML={{ __html: renderBoldItalic(product?.description?.[language] || product?.description?.en || product?.description || "") }}
               />
             </div>
         </div>

@@ -1,4 +1,5 @@
 import { FaFacebookF, FaTwitter, FaInstagram } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import "./footer.css"
 import FooterSkeleton from './footerSkeleton';
 
@@ -22,9 +23,9 @@ export const FooterSection = ({loadinguser}) => {
           <div>
             <h4 className="font-semibold mb-3">Quick Links</h4>
             <ul className="space-y-2 text-[12px] text-gray-700">
-              <li><a href="#">About Us</a></li>
+              <li><Link to="/about">About Us</Link></li>
               <li><a href="#">How It Works</a></li>
-              <li><a href="#">Become a Vendor</a></li>
+              <li><Link to="/sell">Sell on Apna Bazaar</Link></li>
               <li><a href="#">Delivery Info</a></li>
               <li><a href="#">Help & Support</a></li>
             </ul>

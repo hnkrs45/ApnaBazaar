@@ -2,7 +2,7 @@ import PRODUCT from "../models/product.js";
 import USER from "../models/user.js";
 import { getuser } from "../services/auth.js";
 import ORDER from "../models/order.js"
-import { sendVendorApprovalMail } from "../emails/sendMail.js";
+import { sendOrderStatusMail, sendVendorApprovalMail } from "../emails/sendMail.js";
 
 
 export const getProducts = async (req,res) => {
@@ -64,7 +64,30 @@ export const removeproduct = async (req,res) => {
     return res.json({success: true, message: "product successfully removed"});
 }
 export const updateproduct = async (req,res) => {
-    
+  const { id, images, name, price, stock, description, category } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ success: false, message: "Product ID is required" });
+  }
+
+  try {
+    const product = await PRODUCT.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product Not Found" });
+    }
+
+    product.name = name ?? product.name;
+    product.price = price ?? product.price;
+    product.stock = stock ?? product.stock;
+    product.description = description ?? product.description;
+    product.category = category ?? product.category;
+    product.images = images ?? product.images;
+
+    await product.save();
+    return res.json({ success: true, message: "Product updated successfully", product });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
 }
 
 export const checkAuth = async (req,res) => {
@@ -82,7 +105,7 @@ export const checkAuth = async (req,res) => {
         if (!user){
             return res.send({ isAuthenticate: false, message: "UnAutharized Access" })
         }
-        if (user.role!=="Admin"){
+        if (user.role!=="admin"){
             return res.send({ isAuthenticate: false, message: "UnAutharized Access" })
         }
         return res.send({ isAuthenticate: true, message: "Authenticate user", user, role: user.role })
@@ -273,5 +296,72 @@ export const getTotalDetail = async (req,res) => {
     res.status(200).json({success: true, totalOrder: orders.length, totalRevenue, totalVendors})
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { id, nextStatus } = req.body;
+    const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+    if (!id || !nextStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Order ID and next status are required",
+      });
+    }
+
+    if (!validStatuses.includes(nextStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status",
+      });
+    }
+
+    const updatedOrder = await ORDER.findByIdAndUpdate(
+      id,
+      {
+        $set: { orderStatus: nextStatus },
+        $push: {
+          trackingHistory: {
+            status: nextStatus,
+            timestamp: Date.now(),
+            comment: `Order status updated to ${nextStatus}`,
+          },
+        },
+      },
+      { new: true }
+    )
+      .populate(["user", "items.product"]);
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    try {
+      await sendOrderStatusMail(
+        updatedOrder?.shippingAddress?.email,
+        updatedOrder?.shippingAddress?.name,
+        updatedOrder?.orderId,
+        nextStatus
+      );
+    } catch (mailError) {
+      console.error("Error sending order status mail:", mailError);
+    }
+
+    return res.json({
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 }

@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const localApiHost = window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:3000"
+    : "http://localhost:3000";
+
 const api = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL: localApiHost,
     // baseURL: "https://apnabazaar-backend-3iwt.onrender.com",
     withCredentials: true
 })
@@ -47,6 +51,10 @@ export const getOrders = () => {
 
 export const getAllOrders = () => {
     return api.get(`/api/admin/getallorders`)
+}
+
+export const updateOrderStatus = (data) => {
+    return api.put('/api/admin/updateorderstatus', data)
 }
 
 export const getAllUsers = () => {

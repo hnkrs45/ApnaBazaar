@@ -220,6 +220,8 @@ export const addVendor = async (req, res) => {
     const { companyName, address } = req.body;
     const userId = req.user?._id;
 
+    console.log("AddVendor request - User ID:", userId, "Body:", req.body);
+
     if (!companyName || !address) {
       return res
         .status(400)
@@ -232,6 +234,7 @@ export const addVendor = async (req, res) => {
     }
 
     if (user.role === "vendor") {
+      console.log(`User ${userId} is already a vendor, rejecting application.`);
       return res
         .status(400)
         .json({ success: false, message: "You are already a vendor" });
@@ -247,7 +250,12 @@ export const addVendor = async (req, res) => {
 
     await user.save();
 
-    await sendVendorApplicationMail("arshadmansuri572@gmail.com", user?.name, user?.email)
+    try {
+      await sendVendorApplicationMail("arshadmansuri572@gmail.com", user?.name, user?.email)
+    } catch (mailError) {
+      console.error("Error sending vendor application mail:", mailError);
+      // We still return success because the application was saved in the DB
+    }
 
     res.status(200).json({
       success: true,
@@ -298,20 +306,50 @@ export const addRatingReview = async (req,res) => {
             return res.status(404).json({success: false, message: "Product not found"})
         }
 
+        // Initialize ratings if undefined
+        if (!product.ratings) {
+            product.ratings = { average: 0, count: 0 };
+        }
+        if (typeof product.ratings.count !== 'number' || isNaN(product.ratings.count)) {
+            product.ratings.count = 0;
+        }
+
+        // Parse date safely
+        let reviewDate = new Date();
+        if (reviewData.date) {
+            if (typeof reviewData.date === 'string' && reviewData.date.includes('/')) {
+                const parts = reviewData.date.split('/');
+                if (parts.length === 3) {
+                    const parsed = new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (!isNaN(parsed.getTime())) {
+                        reviewDate = parsed;
+                    }
+                }
+            } else {
+                const parsed = new Date(reviewData.date);
+                if (!isNaN(parsed.getTime())) {
+                    reviewDate = parsed;
+                }
+            }
+        }
+
         product.reviews = [...product.reviews, {
             user: reviewData.user,
             username: reviewData.name,
             rating: reviewData.rating,
             comment: reviewData.review,
-            createdAt: reviewData.date
+            createdAt: reviewDate
         }]
+
         let avgrating = 0 
         product.reviews.map((review) => (
             avgrating += review.rating
         ))
-        avgrating = avgrating/(product.ratings.count + 1)
-        product.ratings.count += 1
-        product.ratings.average = avgrating
+        
+        avgrating = avgrating / product.reviews.length;
+        product.ratings.count = product.reviews.length;
+        product.ratings.average = parseFloat(avgrating.toFixed(1));
+
         await product.save()
         return res.status(200).json({ success: true, message: "Review added successfully"})
     } catch (error) {
@@ -343,8 +381,10 @@ export const editReview = async (req, res) => {
     product.reviews.map((review) => (
         avgrating += review.rating
     ))
-    avgrating = avgrating/(product.ratings.count + 1)
-    product.ratings.average = avgrating
+    
+    avgrating = avgrating / product.reviews.length;
+    product.ratings.count = product.reviews.length;
+    product.ratings.average = parseFloat(avgrating.toFixed(1));
 
     await product.save()
 
@@ -362,7 +402,6 @@ export const deleteReview = async (req, res) => {
   try {
     const { productID } = req.query
     const userID = req?.user?._id
-    console.log(productID, userID)
 
     const product = await PRODUCT.findById(productID)
     if (!product) {
@@ -381,15 +420,17 @@ export const deleteReview = async (req, res) => {
 
     product.reviews = updatedReviews
 
-    await product.save()
-    
-    let avgrating = 0
-    product.reviews.map((review) => (
-        avgrating += review.rating
-    ))
-    avgrating = avgrating/(product.ratings.count + 1)
-    product.ratings.count -= 1
-    product.ratings.average = avgrating
+    if (product.reviews.length === 0) {
+      product.ratings.average = 0;
+      product.ratings.count = 0;
+    } else {
+      let avgrating = 0
+      product.reviews.map((review) => (
+          avgrating += review.rating
+      ))
+      product.ratings.count = product.reviews.length;
+      product.ratings.average = parseFloat((avgrating / product.reviews.length).toFixed(1));
+    }
 
     await product.save()
 

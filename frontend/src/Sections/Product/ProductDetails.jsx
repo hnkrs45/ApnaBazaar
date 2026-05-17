@@ -163,6 +163,9 @@ const ProductDetails = () => {
     return <ProductDetailSkeleton/>
   }
   function renderBoldItalic(text) {
+    if (typeof text !== "string") {
+      return "";
+    }
     let html = text.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
     html = html.replace(/\*(.*?)\*/g, "<i>$1</i>");
     html = html.replace(/\n/g, "<br/>");

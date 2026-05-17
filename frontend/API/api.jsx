@@ -1,7 +1,11 @@
 import axios from "axios"
 
+const localApiHost = window.location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:3000"
+    : "http://localhost:3000";
+
 export const api = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3000",
+    baseURL: import.meta.env.VITE_BACKEND_URL || localApiHost,
     // baseURL: "https://apnabazaar-backend-3iwt.onrender.com",
     withCredentials: true
 })

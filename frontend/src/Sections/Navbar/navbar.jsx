@@ -48,8 +48,8 @@ export const NavBar = () => {
                     <ul className={`options flex gap-6 justify-center cursor-pointer text-[16px] font-semibold text-gray-700`}>
                         <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/"><li>{t('nav.home')}</li></NavLink>
                         <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/categories"><li>{t('nav.categories')}</li></NavLink>
-                        <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/vendor/form"><li>{t('nav.farmerHub')}</li></NavLink>
                         <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/about"><li>{t('nav.about')}</li></NavLink>
+                        <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/contact"><li>{t('nav.contact')}</li></NavLink>
                     </ul>
                     <ul className={`mobile-options hidden flex-col items-center text-[20px] gap-[14px] justify-between cursor-pointer overflow-hidden duration-300 ease-linear tarnsition-all ${(menu) ? "h-[135px]" : "h-0"}`}>
                         <NavLink className="link [&.active>li]:font-bold" onClick={handleMenu} to="/"><li>Home</li></NavLink>

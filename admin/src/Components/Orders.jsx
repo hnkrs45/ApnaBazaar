@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Search, Filter, CheckCircle, Clock, Package, EyeIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getAllOrders } from "../../API/product";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getAllOrders, updateOrderStatus } from "../../API/product";
 import OrderCard from "./orderDetail"
+import Swal from "sweetalert2";
 
 export default function Orders() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpenDetail, setIsOpenDetail] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const queryClient = useQueryClient();
 
   const {data, isLoading} = useQuery({
     queryKey: [`orders`],
@@ -27,14 +29,13 @@ export default function Orders() {
     );
   }
 
-  console.log(data.orders)
-  const orders = data.orders
+  const orders = data?.orders || []
 
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.orderStatus === "Pending").length,
     processing: orders.filter((o) => o.orderStatus === "Processing").length,
-    completed: orders.filter((o) => o.orderStatus === "Completed").length,
+    completed: orders.filter((o) => o.orderStatus === "Delivered").length,
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -46,8 +47,37 @@ export default function Orders() {
     return matchesStatus && matchesSearch;
   });
 
-  const onUpdateStatus = async () => {
-    
+  const onUpdateStatus = async (id, nextStatus) => {
+    try {
+      const res = await updateOrderStatus({ id, nextStatus });
+
+      if (res?.data?.success) {
+        setSelectedOrder(res.data.order);
+        await queryClient.invalidateQueries({ queryKey: ["orders"] });
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Order status updated",
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Update failed",
+          text: res?.data?.message || "Unable to update order status",
+        });
+      }
+
+      return res;
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text: err?.response?.data?.message || err.message || "Unable to update order status",
+      });
+      return err?.response;
+    }
   }
 
   return (

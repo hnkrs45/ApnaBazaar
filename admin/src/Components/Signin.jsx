@@ -3,7 +3,7 @@ import { FiMail, FiLock } from "react-icons/fi";
 import { IoIosEye } from "react-icons/io";
 import { IoIosEyeOff } from "react-icons/io";
 import {NavLink, useNavigate} from "react-router-dom"
-import { googleLogin, signin } from "../../API/product";
+import { authCheck, googleLogin, signin } from "../../API/product";
 import {useGoogleLogin} from "@react-oauth/google"
 import LoginError from "./loginError";
 
@@ -50,6 +50,11 @@ export default function SigninForm({setCheckAuth}) {
     }
   }
 
+  const verifyAdminSession = async () => {
+    const authRes = await authCheck();
+    return authRes?.data?.isAuthenticate === true && authRes?.data?.role === "admin";
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -71,9 +76,14 @@ export default function SigninForm({setCheckAuth}) {
       console.log(res); // Now res is defined
       
       if (res?.data?.success){
-        // Update the authentication state in context
-        setCheckAuth(true);
-        navigate('/');
+        const isAdmin = await verifyAdminSession();
+        if (isAdmin) {
+          setCheckAuth(true);
+          navigate('/');
+        } else {
+          setCheckAuth(false);
+          setErrorMessage("Only admin accounts can access this panel.");
+        }
       } else {
         // Handle login failure
         setErrorMessage(res?.data?.message || "Login failed. Please try again.");
@@ -94,9 +104,14 @@ export default function SigninForm({setCheckAuth}) {
       if (authResult['code']){
         const res = await googleLogin(authResult['code']);
         if (res?.data?.success){
-          // Update the authentication state for Google login too
-          setCheckAuth(true);
-          return navigate("/");
+          const isAdmin = await verifyAdminSession();
+          if (isAdmin) {
+            setCheckAuth(true);
+            return navigate("/");
+          }
+          setCheckAuth(false);
+          setErrorMessage("Only admin accounts can access this panel.");
+          return;
         }
         setErrorMessage("Login Error From google")
       }

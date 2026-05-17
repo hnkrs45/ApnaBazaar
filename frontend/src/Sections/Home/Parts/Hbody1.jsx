@@ -4,13 +4,12 @@ import { LuClock3 } from "react-icons/lu";
 import { IoShieldCheckmarkOutline } from "react-icons/io5";
 import { CiDeliveryTruck } from "react-icons/ci";
 import { FaArrowRight } from "react-icons/fa6";
-import { NavLink } from "react-router-dom"
 import { useContext } from "react";
 import { CartProductContext } from "../../../services/context";
 import { useLanguage } from "../../../services/LanguageContext";
 
 export const Hbody1 = () => {
-  const {user, loadinguser} = useContext(CartProductContext)
+  const {loadinguser} = useContext(CartProductContext)
   const { t } = useLanguage();
 
   const handleScroll = () => {
@@ -40,11 +39,6 @@ export const Hbody1 = () => {
                 <FaArrowRight/>
               </div>
 
-              {user?.role==="vendor" && user?.vendor?.status==="Active" ? <NavLink to="/vendor/dashboard"><div className="cursor-pointer vendor-btn h-[45px] w-[180px] border-organic-green border-[2px] bg-white text-organic-green font-bold flex justify-center items-center rounded-full text-[14px] hover:bg-organic-green/5 transition-all">
-                {t('hero.vendorDashboard')}
-              </div></NavLink> :<NavLink to="/vendor/form"><div className="cursor-pointer vendor-btn h-[45px] w-[200px] border-organic-green border-[2px] bg-white text-organic-green font-bold flex justify-center items-center rounded-full text-[14px] hover:bg-organic-green/5 transition-all">
-                {t('hero.startSelling')}
-              </div></NavLink>}
             </div>
 
             <div className="hero-text quality-btns h-[98px] flex justify-between px-10 pt-10 border-t border-gray-100 mt-10">

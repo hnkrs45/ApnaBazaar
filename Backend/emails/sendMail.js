@@ -113,7 +113,7 @@ export const sendOrderConfirmation = (to, name, orderId, items, total) => {
 
         ${items.map(item => `
           <div style="display: flex; align-items: center; border: 1px solid #eee; border-radius: 8px; padding: 10px; margin: 15px 0; text-align: left;">
-            <img src="${item?.images[0]}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; margin-right: 15px;" />
+            <img src="${item?.images?.[0]}" alt="${item?.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; margin-right: 15px;" />
             <div style="flex: 1;">
               <p style="margin: 0; font-weight: bold; font-size: 14px; color: #333;">${item.name}</p>
               <p style="margin: 5px 0 0 0; color: #555; font-size: 13px;">Quantity: ${item.quantity}</p>

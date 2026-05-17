@@ -84,51 +84,84 @@ export default function TrackOrder() {
         {/* Order Progress */}
         <div className="bg-white shadow rounded-2xl p-6">
           <h3 className="font-medium text-gray-700 mb-4">Order Progress</h3>
-          <div className="flex items-center justify-between">
-          {/* Processing */}
-          <div
-            className={`flex flex-col items-center text-center ${
-              ["Processing", "Shipped", "Delivered"].includes(order?.orderStatus)
-                ? "text-black"
-                : "text-gray-400"
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Clock className="w-6 h-6" />
-              <span className="font-medium">Processing</span>
+          {order?.trackingHistory && order.trackingHistory.length > 0 ? (
+            <div className="relative border-l-2 border-gray-200 ml-3 space-y-6">
+              {order.trackingHistory.map((track, index) => {
+                const date = new Date(track.timestamp);
+                let Icon = Clock;
+                if (track.status === 'Shipped') Icon = Truck;
+                else if (track.status === 'Delivered') Icon = CheckCircle;
+                else if (track.status === 'Processing') Icon = Package;
+
+                return (
+                  <div key={index} className="pl-6 relative">
+                    <div className="absolute w-8 h-8 bg-green-100 rounded-full flex items-center justify-center -left-[17px] top-0 border-2 border-white">
+                      <Icon className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{track.status}</p>
+                      <p className="text-sm text-gray-600">{track.comment}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {date.toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+            {/* Processing */}
+            <div
+              className={`flex flex-col items-center text-center ${
+                ["Processing", "Shipped", "Delivered"].includes(order?.orderStatus)
+                  ? "text-black"
+                  : "text-gray-400"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Clock className="w-6 h-6" />
+                <span className="font-medium">Processing</span>
+              </div>
+            </div>
+
+            <div className="flex-1 border-t border-gray-300 mx-2"></div>
+
+            {/* Shipped */}
+            <div
+              className={`flex flex-col items-center text-center ${
+                ["Shipped", "Delivered"].includes(order?.orderStatus)
+                  ? "text-black"
+                  : "text-gray-400"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Truck className="w-6 h-6" />
+                <span>Shipped</span>
+              </div>
+            </div>
+
+            <div className="flex-1 border-t border-gray-300 mx-2"></div>
+
+            {/* Delivered */}
+            <div
+              className={`flex flex-col items-center text-center ${
+                order?.orderStatus === "Delivered" ? "text-black" : "text-gray-400"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-6 h-6" />
+                <span>Delivered</span>
+              </div>
             </div>
           </div>
-
-          <div className="flex-1 border-t border-gray-300 mx-2"></div>
-
-          {/* Shipped */}
-          <div
-            className={`flex flex-col items-center text-center ${
-              ["Shipped", "Delivered"].includes(order?.orderStatus)
-                ? "text-black"
-                : "text-gray-400"
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Truck className="w-6 h-6" />
-              <span>Shipped</span>
-            </div>
-          </div>
-
-          <div className="flex-1 border-t border-gray-300 mx-2"></div>
-
-          {/* Delivered */}
-          <div
-            className={`flex flex-col items-center text-center ${
-              order?.orderStatus === "Delivered" ? "text-black" : "text-gray-400"
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-6 h-6" />
-              <span>Delivered</span>
-            </div>
-          </div>
-        </div>
+          )}
         </div>
 
         {/* Items */}

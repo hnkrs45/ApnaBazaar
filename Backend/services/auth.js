@@ -17,7 +17,7 @@ export const setuserandcookies = (res, user) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
     };
 
-    if (user?.role === "Admin"){
+    if (user?.role === "admin"){
         res.cookie("admin_token", token, cookieOptions);
     } else {
         res.cookie("token", token, cookieOptions);
@@ -45,7 +45,7 @@ export const checkAdmin = async (req,res,next) => {
         if (!user) return res.status(404).json({ message: "User not found" });
 
         const role = user.role;
-        if (role!="Admin"){
+        if (role!="admin"){
             return res.status(401).json({ message: "Unauthorized Access" });
         }
 

@@ -1,14 +1,24 @@
 import { useLanguage } from "../../../services/LanguageContext";
-import { FiUserPlus, FiShoppingBag, FiTruck, FiCheckCircle } from "react-icons/fi";
+import { FiUserPlus, FiShoppingBag } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 export const FarmerGuide = () => {
     const { language, setLanguage, t } = useLanguage();
 
     const steps = [
-        { icon: <FiUserPlus size={24}/>, title: t('farmerGuide.step1.title'), desc: t('farmerGuide.step1.desc') },
-        { icon: <FiShoppingBag size={24}/>, title: t('farmerGuide.step2.title'), desc: t('farmerGuide.step2.desc') },
-        { icon: <FiCheckCircle size={24}/>, title: t('farmerGuide.step3.title'), desc: t('farmerGuide.step3.desc') },
-        { icon: <FiTruck size={24}/>, title: t('farmerGuide.step4.title'), desc: t('farmerGuide.step4.desc') },
+        { 
+            icon: <FiUserPlus size={24}/>, 
+            title: t('farmerGuide.step1.title'), 
+            desc: t('farmerGuide.step1.desc'),
+            link: "/vendor/form"
+        },
+        { 
+            icon: <FiShoppingBag size={24}/>, 
+            title: t('farmerGuide.step2.title'), 
+            desc: t('farmerGuide.step2.desc'),
+            link: "/vendor/dashboard?tab=products"
+        },
+
     ];
 
     return (
@@ -34,18 +44,23 @@ export const FarmerGuide = () => {
                         </button>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                     {steps.map((step, index) => (
-                        <div key={index} className="bg-white/10 backdrop-blur-sm border border-white/10 p-6 rounded-2xl hover:bg-white/20 transition-all group">
-                            <div className="h-12 w-12 bg-white text-organic-green flex justify-center items-center rounded-full mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                        <Link 
+                            to={step.link} 
+                            key={index} 
+                            className="bg-white/10 backdrop-blur-sm border border-white/10 p-8 rounded-3xl hover:bg-white/20 transition-all group flex flex-col items-center md:items-start text-center md:text-left"
+                        >
+                            <div className="h-14 w-14 bg-white text-organic-green flex justify-center items-center rounded-2xl mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
                                 {step.icon}
                             </div>
-                            <h3 className="text-[20px] font-bold mb-2">{step.title}</h3>
-                            <p className="text-[14px] text-white/80 leading-relaxed">{step.desc}</p>
-                        </div>
+                            <h3 className="text-[24px] font-bold mb-3">{step.title}</h3>
+                            <p className="text-[16px] text-white/80 leading-relaxed">{step.desc}</p>
+                        </Link>
                     ))}
                 </div>
             </div>
         </div>
     );
 };
+
