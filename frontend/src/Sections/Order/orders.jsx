@@ -12,7 +12,7 @@ import { useLanguage } from "../../services/LanguageContext"
 const Orders = ({user}) => {
     const { language } = useLanguage();
     const [filter, setFilter] = useState("All")
-    const [year, setYear] = useState("2025")
+    const [year, setYear] = useState(String(new Date().getFullYear()))
 
     const {data: orders, isLoading} = useQuery({
         queryKey: ["orders"],
@@ -69,7 +69,7 @@ const Orders = ({user}) => {
             <div className="w-full flex flex-col gap-6 items-center relative">
                 {orders?.filter(order => {
                     const orderYear = new Date(order.createdAt).getFullYear();
-                    const matchesStatus = filter === "All" || order.orderStatus === filter;
+                    const matchesStatus = filter === "All" || (order.orderStatus?.toLowerCase() === filter.toLowerCase());
                     const matchesYear = orderYear === Number(year);
                     return matchesStatus && matchesYear;
                 })

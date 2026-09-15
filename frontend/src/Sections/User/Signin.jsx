@@ -45,12 +45,8 @@ export default function SigninForm() {
   };
 
   const sendData = async (userData) => {
-    try {
-      return await signin(userData);
-    } catch (error) {
-      console.log("Sign in Error",error);
-    }
-  }
+    return await signin(userData);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isValidEmail(formData.email)){
@@ -61,13 +57,19 @@ export default function SigninForm() {
       return;
     }
     if (formData.email==="" || formData.password===""){
-      alert("don't use your extra brain, just fill the form and continue")
+      setErrorMessage("Please enter both email and password.");
       return;
     }
-    const res = await sendData(formData);
-    refetch()
-    if (res.data.success){
-      navigate('/');
+    try {
+      const res = await sendData(formData);
+      if (res?.data?.success){
+        await refetch();
+        navigate('/');
+      } else {
+        setErrorMessage(res?.data?.message || "Invalid credentials. Please try again.");
+      }
+    } catch (err) {
+      setErrorMessage(err?.response?.data?.message || "Unable to sign in. Please check your credentials.");
     }
     setFormData({
       email: "",

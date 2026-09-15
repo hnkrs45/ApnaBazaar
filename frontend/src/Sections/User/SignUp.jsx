@@ -72,7 +72,7 @@ export default function SignupForm() {
       return;
     }
     if (formData.firstName==="" || formData.lastName==="" || formData.email==="" || formData.phone==="" || formData.password==="" || formData.confirmPassword===""){
-      alert("don't use your extra brain, just fill the form and continue")
+      setErrorMessage("Please fill in all required fields.");
       return;
     }
     

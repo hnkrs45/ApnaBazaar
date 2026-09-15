@@ -1,40 +1,68 @@
 import PRODUCT from "../models/product.js";
 
 export const getproduct = async (req, res) => {
-    const {cat} = req.query;
-    const products = await PRODUCT.find({category:cat}).populate("vendor");
-    if (products.length==0) return res.json({message: `Products not found with category ${cat}`})
-    return res.json({success: true, message: `Products with category ${cat}`,items: products.length, products})
+    try {
+        const {cat} = req.query;
+        const query = { isActive: true };
+        if (cat && cat !== "All") {
+            query.category = { $regex: new RegExp(`^${cat}$`, "i") };
+        }
+        const products = await PRODUCT.find(query).populate("vendor").lean();
+        const formattedProducts = products.map(p => ({
+            productID: p._id,
+            inStock: (p.stock || 0) > 0,
+            ...p
+        }));
+        return res.status(200).json({
+            success: true,
+            message: `Products for category ${cat || "All"}`,
+            items: formattedProducts.length,
+            products: formattedProducts
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
 }
 
 export const getallproducts = async (req,res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 100;
-    const skip = (page - 1) * limit;
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 100;
+        const skip = (page - 1) * limit;
 
-    const products = await PRODUCT.find({isActive: true}).populate("vendor").skip(skip).limit(limit).lean();
-    if (products.length==0) return res.json({message: `Products not found`})
-    const formattedProducts = products.map(p => {
-        const {stock, ...rest} = p;
-        return {
-          productID: p._id,
-          inStock: stock>0,
-          ...rest
-        }
-    });
-    return res.json({success: true, message: `All Products`,items: products.length, products: formattedProducts})
+        const products = await PRODUCT.find({isActive: true}).populate("vendor").skip(skip).limit(limit).lean();
+        const formattedProducts = products.map(p => {
+            const {stock, ...rest} = p;
+            return {
+              productID: p._id,
+              inStock: (stock || 0) > 0,
+              stock: stock || 0,
+              ...rest
+            }
+        });
+        return res.status(200).json({success: true, message: `All Products`, items: formattedProducts.length, products: formattedProducts})
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
 }
 
 export const getproductsbyid = async (req, res) => {
-    const {id} = req.query;
-    const product = await PRODUCT.findOne({_id: id}).lean().populate("vendor");
-    const {stock, ...rest} = product
-    const formattedProduct = {
-        productID: product._id,
-        inStock: stock > 0,
-        ...rest
+    try {
+        const {id} = req.query;
+        if (!id) return res.status(400).json({ success: false, message: "Product ID is required" });
+        const product = await PRODUCT.findOne({_id: id}).lean().populate("vendor");
+        if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+        const {stock, ...rest} = product;
+        const formattedProduct = {
+            productID: product._id,
+            inStock: (stock || 0) > 0,
+            stock: stock || 0,
+            ...rest
+        };
+        return res.status(200).json({success: true, product: formattedProduct});
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
-    res.json({success: true, product: formattedProduct})
 }
 
 export const searchProduct = async (req, res) => {
@@ -52,9 +80,15 @@ export const searchProduct = async (req, res) => {
     }
 
     if (name) {
+      const searchRegex = new RegExp(name.trim(), "i");
       const matchedProducts = await PRODUCT.find({
         ...baseQuery,
-        name: { $regex: name, $options: "i" }
+        $or: [
+          { "name.en": { $regex: searchRegex } },
+          { "name.hi": { $regex: searchRegex } },
+          { category: { $regex: searchRegex } },
+          { "description.en": { $regex: searchRegex } }
+        ]
       }).populate("vendor").lean();
 
       if (matchedProducts.length > 0) {

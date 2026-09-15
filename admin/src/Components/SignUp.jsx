@@ -66,7 +66,7 @@ export default function SignupForm() {
       return;
     }
     if (formData.firstName==="" || formData.lastName==="" || formData.email==="" || formData.phone==="" || formData.password==="" || formData.confirmPassword===""){
-      alert("don't use your extra brain, just fill the form and continue")
+      setErrorMessage("Please fill in all required fields."); return;
       return;
     }
     const {email, phone, password, subscribe} = formData;
@@ -77,8 +77,7 @@ export default function SignupForm() {
       password,
       subscribe
     }
-    sendUserData(sendData);
-    navigate('/login')
+    sendUserData(sendData).then(res => { if (res?.data?.success) { navigate("/signin"); } else { setErrorMessage(res?.data?.message || "Registration failed."); } }).catch(err => { setErrorMessage("Registration failed. Please try again."); });
     setFormData({
       firstName: "",
       lastName: "",

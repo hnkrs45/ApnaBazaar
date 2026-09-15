@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, CheckCircle, Clock, Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, CheckCircle, Clock, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getVendors } from "../../API/product";
 import VendorDetailsModal from "./vendorDetailModel";
@@ -8,240 +8,224 @@ export default function Vendors() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [expandedVendor, setExpandedVendor] = useState(null);
-  const {data, isLoading, refetch} = useQuery({
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["vendors"],
     queryFn: getVendors,
     select: (res) => res?.data || null
-  })
+  });
 
-  if (isLoading){
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading vendors...</p>
         </div>
       </div>
     );
   }
 
-  const vendors = data?.vendors;
-  console.log(vendors)
-  // Toggle vendor details on mobile
+  const vendors = Array.isArray(data?.vendors) ? data.vendors : [];
+
+  const filteredVendors = vendors.filter((v) => {
+    const status = v?.vendor?.status || "Pending";
+    const matchesStatus = statusFilter === "All" || status === statusFilter;
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return matchesStatus;
+
+    const matchesSearch =
+      (v.name && v.name.toLowerCase().includes(query)) ||
+      (v.email && v.email.toLowerCase().includes(query)) ||
+      (v.vendor?.companyName && v.vendor.companyName.toLowerCase().includes(query)) ||
+      (v.vendor?.address && v.vendor.address.toLowerCase().includes(query));
+
+    return matchesStatus && matchesSearch;
+  });
+
   const toggleVendorDetails = (id) => {
-    if (expandedVendor === id) {
-      setExpandedVendor(null);
-    } else {
-      setExpandedVendor(id);
-    }
+    setExpandedVendor(prev => (prev === id ? null : id));
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-5 lg:p-6">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
       <VendorDetailsModal
         vendor={selectedVendor}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         refetch={refetch}
       />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold mb-1">Vendors Management</h2>
-          <p className="text-gray-500 text-sm sm:text-base">
-            Manage local vendors and their applications
+          <h2 className="text-2xl font-bold text-gray-900">Vendors Management</h2>
+          <p className="text-gray-500 text-sm">
+            Review partner applications, verify documentation, and monitor vendor sales
           </p>
-        </div>
-        
-        <div className="flex gap-2">
-          <div className="relative flex-1 sm:flex-initial">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input 
-              type="text" 
-              placeholder="Search vendors..." 
-              className="pl-8 pr-3 py-2 border rounded-lg text-sm w-full sm:w-48 md:w-64"
-            />
-          </div>
-          <button className="p-2 border rounded-lg flex items-center gap-1 text-sm">
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filter</span>
-          </button>
         </div>
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-        <div className="p-3 sm:p-4 rounded-xl border bg-white shadow col-span-2 sm:col-span-1">
-          <p className="text-gray-500 text-xs sm:text-sm">Total Vendors</p>
-          <p className="text-lg sm:text-xl md:text-2xl font-bold">{vendors.length}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+          <p className="text-gray-500 text-xs sm:text-sm">Total Applications</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{vendors.length}</p>
         </div>
-        <div className="p-3 sm:p-4 rounded-xl border bg-white shadow">
-          <p className="text-gray-500 text-xs sm:text-sm">Active</p>
-          <p className="text-lg sm:text-xl md:text-2xl font-bold">
-            {vendors?.filter((v) => v?.vendor?.status === "Active").length}
+        <div className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+          <p className="text-gray-500 text-xs sm:text-sm">Active Vendors</p>
+          <p className="text-2xl font-bold text-emerald-600 mt-1">
+            {vendors.filter((v) => v?.vendor?.status === "Active").length}
           </p>
         </div>
-        <div className="p-3 sm:p-4 rounded-xl border bg-white shadow">
+        <div className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
           <p className="text-gray-500 text-xs sm:text-sm">Pending Approval</p>
-          <p className="text-lg sm:text-xl md:text-2xl font-bold">
-            {vendors?.filter((v) => v?.vendor?.status === "Pending").length}
+          <p className="text-2xl font-bold text-yellow-600 mt-1">
+            {vendors.filter((v) => v?.vendor?.status === "Pending" || !v?.vendor?.status).length}
           </p>
         </div>
-        <div className="p-3 sm:p-4 rounded-xl border bg-white shadow col-span-2 sm:col-span-1">
-          <p className="text-gray-500 text-xs sm:text-sm">Total Products</p>
-          <p className="text-lg sm:text-xl md:text-2xl font-bold">
-            {vendors?.reduce((sum, v) => sum + (v?.vendor?.products?.length || 0), 0)}
+        <div className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+          <p className="text-gray-500 text-xs sm:text-sm">Total Listed Products</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">
+            {vendors.reduce((sum, v) => sum + (v?.vendor?.products?.length || 0), 0)}
           </p>
         </div>
       </div>
 
-      {/* Vendors Table */}
-      <div className="rounded-xl border bg-white shadow overflow-hidden">
-        {/* Table Header for Desktop */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-50 text-gray-600 text-sm">
-              <tr>
-                <th className="p-3 text-left">Vendor</th>
-                <th className="p-3 text-left">Location</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Products</th>
-                <th className="p-3 text-left">Rating</th>
-                <th className="p-3 text-left">Sales</th>
-                <th className="p-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendors.map((v, index) => (
-                <tr key={index} className="border-t hover:bg-gray-50">
-                  <td className="p-3">
-                    <div>
-                      <p className="font-medium">{v?.name}</p>
-                      <p className="text-sm text-gray-500">{v?._id}</p>
-                    </div>
-                  </td>
-                  <td className="p-3">{v?.vendor?.address}</td>
-                  <td className="p-3">
-                    <span
-                      className={`flex items-center gap-1 px-2 w-fit py-1 rounded-full text-sm font-medium ₹{
-                        v?.vendor?.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {v?.vendor?.status === "Active" ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        <Clock className="w-4 h-4" />
-                      )}
-                      {v?.vendor?.status}
-                    </span>
-                  </td>
-                  <td className="p-3">{v?.vendor?.products?.length}</td>
-                  <td className="p-3">
-                    {v?.rating}{" "}
-                    <span className="text-gray-400 text-sm">
-                      ({v?.reviews})
-                    </span>
-                  </td>
-                  <td className="p-3 font-semibold">
-                    ₹{v?.vendor?.totalRevenue === 0 ? 0 : v?.vendor?.totalRevenue}
-                  </td>
-                  <td className="p-3">
-                    <button onClick={() => {
-                      setSelectedVendor(v);
-                      setIsOpen(true);
-                    }} className="flex items-center gap-1 text-blue-600 hover:underline text-sm">
-                      <Eye className="w-4 h-4" /> View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input 
+            type="text" 
+            placeholder="Search vendors by company, name, location..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm w-full bg-white outline-none focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 bg-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+        >
+          <option value="All">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
 
-        {/* Mobile Cards View */}
-        <div className="md:hidden">
-          {vendors.map((v, index) => (
-            <div key={index} className="border-b last:border-b-0">
-              <div 
-                className="p-4 flex justify-between items-center cursor-pointer"
-                onClick={() => toggleVendorDetails(v._id)}
-              >
-                <div>
-                  <p className="font-medium">{v?.name}</p>
-                  <p className="text-sm text-gray-500">{v?._id}</p>
-                </div>
-                <div className="flex items-center gap-2">
+      {/* Empty State */}
+      {filteredVendors.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <p className="text-gray-600 font-medium">No vendors found.</p>
+          <p className="text-gray-400 text-sm mt-1">Try refining your search or status filter.</p>
+        </div>
+      ) : (
+        /* Vendors Table */
+        <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+          {/* Table Header for Desktop */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <tr>
+                  <th className="p-3.5">Vendor</th>
+                  <th className="p-3.5">Address</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5">Products</th>
+                  <th className="p-3.5">Sales</th>
+                  <th className="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 text-sm">
+                {filteredVendors.map((v) => (
+                  <tr key={v._id} className="hover:bg-gray-50 transition">
+                    <td className="p-3.5">
+                      <div>
+                        <p className="font-semibold text-gray-900">{v?.vendor?.companyName || v?.name}</p>
+                        <p className="text-xs text-gray-500">{v?.email}</p>
+                      </div>
+                    </td>
+                    <td className="p-3.5 text-gray-600 max-w-xs truncate">{v?.vendor?.address || "N/A"}</td>
+                    <td className="p-3.5">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          v?.vendor?.status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {v?.vendor?.status === "Active" ? (
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" />
+                        )}
+                        {v?.vendor?.status || "Pending"}
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-medium text-gray-700">{v?.vendor?.products?.length || 0}</td>
+                    <td className="p-3.5 font-semibold text-gray-900">
+                      ₹{Number(v?.vendor?.totalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <button 
+                        onClick={() => {
+                          setSelectedVendor(v);
+                          setIsOpen(true);
+                        }} 
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-medium transition"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> Review Application
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="md:hidden divide-y divide-gray-100">
+            {filteredVendors.map((v) => (
+              <div key={v._id} className="p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-gray-900">{v?.vendor?.companyName || v?.name}</p>
+                    <p className="text-xs text-gray-500">{v?.email}</p>
+                  </div>
                   <span
-                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ₹{
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                       v?.vendor?.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {v?.vendor?.status === "Active" ? (
-                      <CheckCircle className="w-3 h-3" />
-                    ) : (
-                      <Clock className="w-3 h-3" />
-                    )}
-                    {v?.vendor?.status}
+                    {v?.vendor?.status || "Pending"}
                   </span>
-                  {expandedVendor === v.id ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
                 </div>
+                
+                <p className="text-xs text-gray-600">📍 {v?.vendor?.address || "No address provided"}</p>
+                <div className="flex justify-between text-xs text-gray-500 pt-1">
+                  <span>Products: {v?.vendor?.products?.length || 0}</span>
+                  <span className="font-semibold text-gray-900">Sales: ₹{Number(v?.vendor?.totalRevenue || 0).toFixed(2)}</span>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedVendor(v);
+                    setIsOpen(true);
+                  }}
+                  className="w-full mt-2 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Review Application
+                </button>
               </div>
-              
-              {expandedVendor === v._id && (
-                <div className="px-4 pb-4 pt-2 bg-gray-50">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-gray-500">Location</p>
-                      <p className="font-medium">{v?.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Category</p>
-                      <p className="font-medium">
-                        <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">
-                          {v?.category}
-                        </span>
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Products</p>
-                      <p className="font-medium">{v?.vendor?.products?.length}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Rating</p>
-                      <p className="font-medium">
-                        {v.rating} <span className="text-gray-400">({v.reviews})</span>
-                      </p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-gray-500">Sales</p>
-                      <p className="font-medium">₹{v?.vendor?.totalRevenue === 0 ? 0 : v?.vendor?.totalRevenue}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <button
-                      onClick={() => {
-                        setSelectedVendor(v);
-                        setIsOpen(true);
-                      }}
-                      className="w-full flex items-center justify-center gap-1 text-blue-600 hover:underline text-sm py-2 border border-blue-200 rounded-lg">
-                      <Eye className="w-4 h-4" /> View Details
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
-} 
+}

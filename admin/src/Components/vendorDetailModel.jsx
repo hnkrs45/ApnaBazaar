@@ -44,7 +44,7 @@ export default function VendorDetailsModal({ vendor, isOpen, onClose, refetch })
         <div className="grid grid-cols-4 gap-4 my-6 text-center">
           <div>
             <Package className="mx-auto text-blue-500" />
-            <p className="font-semibold">{vendor?.vendor?.products.length}</p>
+            <p className="font-semibold">{vendor?.vendor?.products?.length || 0}</p>
             <p className="text-sm text-gray-500">Products</p>
           </div>
           <div>

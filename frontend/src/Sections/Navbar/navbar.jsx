@@ -4,7 +4,7 @@ import { IoMdClose, IoMdMenu } from "react-icons/io";
 import { NavLink } from 'react-router-dom';
 import { CartProductContext } from "../../services/context";
 import { useLanguage } from "../../services/LanguageContext";
-import Cart from "../Cart/cart";
+import Cart from "../Cart/Cart";
 import { SearchBar } from "./components/SearchBar";
 import "./navbar.css";
 import NavbarSkeleton from "./NavbarSkeleton.jsx";
@@ -51,7 +51,7 @@ export const NavBar = () => {
                         <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/about"><li>{t('nav.about')}</li></NavLink>
                         <NavLink className="link [&.active]:text-organic-green hover:text-organic-green transition-all" onClick={handleMenu} to="/contact"><li>{t('nav.contact')}</li></NavLink>
                     </ul>
-                    <ul className={`mobile-options hidden flex-col items-center text-[20px] gap-[14px] justify-between cursor-pointer overflow-hidden duration-300 ease-linear tarnsition-all ${(menu) ? "h-[135px]" : "h-0"}`}>
+                    <ul className={`mobile-options hidden flex-col items-center text-[20px] gap-[14px] justify-between cursor-pointer overflow-hidden duration-300 ease-linear transition-all ${(menu) ? "h-[135px]" : "h-0"}`}>
                         <NavLink className="link [&.active>li]:font-bold" onClick={handleMenu} to="/"><li>Home</li></NavLink>
                         <NavLink className="link [&.active>li]:font-bold" onClick={handleMenu} to="/categories"><li>Categories</li></NavLink>
                         <NavLink className="link [&.active>li]:font-bold" onClick={handleMenu} to="/about"><li>About</li></NavLink>

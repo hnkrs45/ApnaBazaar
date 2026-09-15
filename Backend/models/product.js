@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
     name: {
-        en: { type: String, required: [true, "English product name is required"] },
-        hi: { type: String, required: [true, "Hindi product name is required"] }
+        en: { type: String, default: "" },
+        hi: { type: String, default: "" }
     },
     description: {
-        en: { type: String, required: [true, "English description is required"] },
-        hi: { type: String, required: [true, "Hindi description is required"] }
+        en: { type: String, default: "" },
+        hi: { type: String, default: "" }
     },
     price: {
         type: Number,

@@ -51,46 +51,54 @@ export const login = async (req,res) => {
         const user = await USER.findOne({email});
 
         if (!user){
-            return res.json({success: false, message: "user not registered"});
+            return res.status(404).json({success: false, message: "User not registered"});
         }
 
         const UserPassword = user.password;
         const isMatch = await bcrypt.compare(password, UserPassword);
         if (!isMatch){
-            return res.json({success: false, message: "incorrect possword"});
+            return res.status(401).json({success: false, message: "Incorrect password"});
         } else {
             const token = setuserandcookies(res, user);
-            return res.json({success: true, message: "user login successfully", token});
+            return res.status(200).json({success: true, message: "User logged in successfully", token, user: { name: user.name, email: user.email, role: user.role }});
         }
     } catch (error) {
-        res.json({error: error});
+        return res.status(500).json({success: false, message: error.message || "Internal server error"});
     }
 }
 
 export const verifyEmail = async (req,res) => {
-    const {Token} = req.query
-    const user = await USER.findOne({verificationToken: Token});
-    if (!user){
-        return res.json({ success: false, message: "Invalid or expired verification link" })
-    }
-    if (user?.verificationTokenExpiry < Date.now()){
-        return res.json({ success: false, message: "Verification link has expired" });
-    }
+    try {
+        const {Token} = req.query
+        const user = await USER.findOne({verificationToken: Token});
+        if (!user){
+            return res.status(400).json({ success: false, message: "Invalid or expired verification link" })
+        }
+        if (user?.verificationTokenExpiry < Date.now()){
+            return res.status(400).json({ success: false, message: "Verification link has expired" });
+        }
 
-    await USER.updateOne(
-        { _id: user._id },
-        { $set: { isVerified: true }, $unset: { verificationToken: "", verificationTokenExpiry: "" } }
-    );
+        await USER.updateOne(
+            { _id: user._id },
+            { $set: { isVerified: true }, $unset: { verificationToken: "", verificationTokenExpiry: "" } }
+        );
 
-    return res.json({ success: true, message: "User verified successfully" });
+        return res.status(200).json({ success: true, message: "User verified successfully" });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
 }
 
 export const verify = (req,res) => {
-    const {token} = req.body;
-    if (!token) return null;
-    const user = getuser(token);
-    if (!user) return null;
-    return res.json({message: "user is verified",user})
+    try {
+        const {token} = req.body;
+        if (!token) return res.status(400).json({ success: false, message: "Token is required" });
+        const user = getuser(token);
+        if (!user) return res.status(401).json({ success: false, message: "Invalid or expired token" });
+        return res.status(200).json({ success: true, message: "User is verified", user })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
 }
 
 export const googleLogin = async (req,res) => {
@@ -124,18 +132,18 @@ export const googleLogin = async (req,res) => {
 
 export const authCheck = async (req,res) => {
     try {
-        const token = req?.cookies?.token
+        const token = req?.cookies?.token || req?.cookies?.admin_token || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : req.headers.authorization);
         if (!token){
-            return res.send({isAuthenticate: false, message: "UnAutharized Access"})
+            return res.send({isAuthenticate: false, message: "Unauthorized Access: No token"})
         }
         const decodeUser = getuser(token)
-        if (!decodeUser){
-            return res.send({isAuthenticate: false, message: "UnAutharized Access"})
+        if (!decodeUser?.email){
+            return res.send({isAuthenticate: false, message: "Unauthorized Access: Invalid token"})
         }
-        const email = decodeUser?.email
-        const user = await USER.findOne({email});
+        const email = decodeUser.email
+        const user = await USER.findOne({email}).select("-password");
         if (!user){
-            return res.send({isAuthenticate: false, message: "UnAutharized Access"})
+            return res.send({isAuthenticate: false, message: "Unauthorized Access: User not found"})
         }
         return res.send({ isAuthenticate: true, message: "Authenticate user", user, role: user.role })
     } catch (error) {
@@ -191,14 +199,14 @@ export const getWishlist = async (req,res) => {
         const data = await USER.findById(req.user._id).populate("wishlist")
         return res.status(200).json({success: true, data})
     } catch (error) {
-        res.status(500).json({ message: err.message , success: false});
+        res.status(500).json({ message: error.message , success: false});
     }
 }
 
 export const updateUser = async (req,res) => {
     const formData = req.body;
     const data = {
-        name: `${formData.firstName} ${formData.lastName}`,
+        name: `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || formData.name,
         email: formData.email,
         phone: formData.phone
     }
@@ -211,7 +219,7 @@ export const updateUser = async (req,res) => {
 
         res.status(200).json({ success: true, message: "User updated successfully", user: updatedUser });
     } catch (error) {
-        res.status(500).json({ message: err.message , success: false});
+        res.status(500).json({ message: error.message , success: false});
     }
 }
 

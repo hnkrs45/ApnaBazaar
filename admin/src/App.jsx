@@ -14,7 +14,7 @@ import { CartProductContext } from "./services/context";
 import { useEffect, useState } from "react";
 import ProtectedRoute from "./services/protectedRoute";
 
-const GOOGLE_CLIENT_ID = "316084868865-6cm9ag49f38mgqp25ttja2i61cbjbl6l.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "316084868865-6cm9ag49f38mgqp25ttja2i61cbjbl6l.apps.googleusercontent.com";
 
 const GoogleAuthWrapper = ({ children }) => (
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>

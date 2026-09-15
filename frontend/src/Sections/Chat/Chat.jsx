@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import { api, getMessages, sendMessage } from "../../../API/api";
+import { api, authCheck, getMessages, sendMessage } from "../../../API/api";
 import Loading from "../Loading/loading";
 
 const Chat = () => {
@@ -15,8 +15,8 @@ const Chat = () => {
 
     // Fetch my ID
     useEffect(() => {
-        api.get("/api/user/auth").then((res) => {
-            if (res.data.success) {
+        authCheck().then((res) => {
+            if (res.data?.isAuthenticate && res.data?.user) {
                 setMe(res.data.user);
             }
         }).catch(err => console.log(err));

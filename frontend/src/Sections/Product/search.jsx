@@ -21,13 +21,15 @@ const Search = () => {
         select: (res) => res?.data
     })
 
-    const {data: mlprd, isLoading: productLoading} = useQuery({
+    const {data: mlprd} = useQuery({
         queryKey: ["mlproducts", name],
         queryFn: () => userSearchMl(name || "default"),
-        select: (res) => res?.data
+        select: (res) => res?.data,
+        retry: false,
+        refetchOnWindowFocus: false
     })
 
-    if (isLoading || productLoading){
+    if (isLoading){
         return (
             <div className="search-result-section bg-white mb-[30px] relative flex flex-col items-center mt-[120px]">
                 <div className="feature-products flex flex-col items-center">

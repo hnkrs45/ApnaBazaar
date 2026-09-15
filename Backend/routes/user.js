@@ -17,6 +17,7 @@ router.put('/update',auth, updateUser);
 router.get('/logout', logout)
 router.post('/addvendor', auth, addVendor)
 router.post('/interection', auth, interection)
+router.post('/interaction', interection)
 router.post('/addratingreview', auth, addRatingReview)
 router.put('/editreview', auth, editReview)
 router.delete('/deletereview', auth, deleteReview)
