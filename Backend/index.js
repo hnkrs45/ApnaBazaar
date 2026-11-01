@@ -34,15 +34,13 @@ const allowedOrigins = [
 ];
 
 const isAllowedOrigin = (origin) => {
-  if (!origin) return true; // Server-to-server or same-origin
-  if (allowedOrigins.includes(origin)) return true;
-  if (process.env.client_url && origin === process.env.client_url) return true;
-  if (
-    process.env.NODE_ENV !== "production" &&
-    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
-  ) {
-    return true;
-  }
+  if (!origin) return true;
+  const cleanOrigin = origin.replace(/\/$/, "");
+  if (allowedOrigins.includes(cleanOrigin)) return true;
+  if (process.env.client_url && cleanOrigin === process.env.client_url.replace(/\/$/, "")) return true;
+  if (/^https:\/\/apna-bazaar.*\.vercel\.app$/.test(cleanOrigin)) return true;
+  if (/^https:\/\/.*apna-bazaar.*\.vercel\.app$/.test(cleanOrigin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) return true;
   return false;
 };
 
@@ -69,14 +67,16 @@ app.use(
       if (isAllowedOrigin(origin)) {
         callback(null, origin || true);
       } else {
-        callback(new Error(`CORS: origin '${origin}' not allowed`));
+        callback(null, false);
       }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    exposedHeaders: ["Set-Cookie"]
   })
 );
+
 
 // Apply general API rate limiter
 app.use(generalLimiter);
@@ -94,6 +94,12 @@ app.use(cookieParser());
 app.use(async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
+      if (!process.env.MONGO_URL) {
+        return res.status(500).json({
+          success: false,
+          message: "Database configuration error: MONGO_URL is not set in Vercel environment variables."
+        });
+      }
       await connect(url);
     }
     next();
@@ -101,7 +107,7 @@ app.use(async (req, res, next) => {
     console.error("Database connection error:", err.message);
     res.status(503).json({
       success: false,
-      message: "Service temporarily unavailable. Please try again."
+      message: "Database connection failed. Please ensure MongoDB Atlas allows access from all IPs (0.0.0.0/0)."
     });
   }
 });
