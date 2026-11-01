@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
   Menu, 
@@ -11,10 +11,12 @@ import {
   LogOut 
 } from "lucide-react";
 import { logout } from "../../API/product";
+import { CartProductContext } from "../services/context";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, setCheckAuth } = useContext(CartProductContext) || {};
 
   const handleLogout = async () => {
     try {
@@ -22,6 +24,7 @@ export default function Sidebar() {
     } catch {
       // Proceed with frontend logout regardless
     }
+    if (setCheckAuth) setCheckAuth(false);
     navigate("/signin");
     window.location.reload();
   };
@@ -57,26 +60,29 @@ export default function Sidebar() {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-5 z-40 transition-transform duration-300 ease-in-out md:translate-x-0 md:static shrink-0 ${
+        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-100 flex flex-col p-5 z-40 transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 shrink-0 overflow-y-auto ${
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:shadow-none"
         }`}
       >
-        <div>
-          {/* Brand Header */}
-          <div className="flex items-center gap-3 px-2 py-4 mb-4 border-b border-gray-100">
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
-              AB
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900 leading-tight">ApnaBazaar</h2>
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                Admin Control
-              </span>
-            </div>
+        {/* Brand Header */}
+        <div className="flex items-center gap-3 px-2 py-3 mb-4 border-b border-gray-100">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
+            AB
           </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-bold text-gray-900 leading-tight">ApnaBazaar</h2>
+            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
+              Admin Control
+            </span>
+          </div>
+        </div>
 
-          {/* Navigation Links */}
-          <nav className="space-y-1.5">
+        {/* Navigation Section */}
+        <div>
+          <p className="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+            Main Menu
+          </p>
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -101,14 +107,37 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        {/* Footer Logout */}
-        <div className="pt-4 border-t border-gray-100">
+        {/* Account & Sign Out Section (placed right under Navigation for quick reach) */}
+        <div className="mt-6 pt-5 border-t border-gray-100 space-y-3">
+          <p className="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+            Account
+          </p>
+
+          {/* Admin User Card */}
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
+            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 uppercase">
+              {user?.name ? user.name[0] : "A"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-900 truncate">
+                {user?.name || "Admin User"}
+              </p>
+              <p className="text-[11px] text-gray-500 truncate">
+                {user?.email || "admin@apnabazaar.com"}
+              </p>
+            </div>
+          </div>
+
+          {/* Sign Out Button */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:text-red-700 bg-red-50/70 hover:bg-red-100/80 border border-red-100 transition-all cursor-pointer group"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
-            <span>Sign Out</span>
+            <div className="flex items-center gap-2.5">
+              <LogOut className="w-4 h-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />
+              <span>Sign Out</span>
+            </div>
+            <span className="text-xs text-red-400 group-hover:text-red-600 font-medium">Exit</span>
           </button>
         </div>
       </aside>

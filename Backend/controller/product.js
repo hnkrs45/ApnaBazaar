@@ -1,5 +1,11 @@
 import PRODUCT from "../models/product.js";
+import USER from "../models/user.js";
 import { getEmbedding } from "../services/aiService.js";
+import { aiSuggestionService } from "../services/ai/index.js";
+
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
 
 export const getproduct = async (req, res) => {
   try {
@@ -99,7 +105,7 @@ export const searchProduct = async (req, res) => {
     }
 
     if (name) {
-      const searchRegex = new RegExp(name.trim(), "i");
+      const searchRegex = new RegExp(escapeRegex(name.trim()), "i");
       const matchedProducts = await PRODUCT.find({
         ...baseQuery,
         $or: [
@@ -128,6 +134,44 @@ export const searchProduct = async (req, res) => {
 
         products = Array.from(allProductsMap.values());
         products = products.slice(skip, skip + limit);
+      } else {
+        // Semantic AI fallback search
+        try {
+          const catalogCategories = await PRODUCT.distinct("category", { isActive: true });
+          const aiSuggestions = await aiSuggestionService.getSemanticSuggestions(
+            name.trim(),
+            catalogCategories
+          );
+
+          const { categories: suggestedCategories, keywords: suggestedKeywords } = aiSuggestions;
+          const semanticOrConditions = [];
+
+          if (Array.isArray(suggestedCategories) && suggestedCategories.length > 0) {
+            semanticOrConditions.push({ category: { $in: suggestedCategories } });
+          }
+
+          if (Array.isArray(suggestedKeywords) && suggestedKeywords.length > 0) {
+            suggestedKeywords.forEach((kw) => {
+              const kwRegex = new RegExp(escapeRegex(kw), "i");
+              semanticOrConditions.push({ "name.en": { $regex: kwRegex } });
+              semanticOrConditions.push({ "name.hi": { $regex: kwRegex } });
+              semanticOrConditions.push({ "description.en": { $regex: kwRegex } });
+            });
+          }
+
+          if (semanticOrConditions.length > 0) {
+            products = await PRODUCT.find({
+              ...baseQuery,
+              $or: semanticOrConditions,
+            })
+              .populate("vendor")
+              .skip(skip)
+              .limit(limit)
+              .lean();
+          }
+        } catch (aiErr) {
+          console.error("AI Fallback search error:", aiErr);
+        }
       }
     } else {
       products = await PRODUCT.find(baseQuery)

@@ -4,7 +4,7 @@ import { IoMdClose, IoMdMenu } from "react-icons/io";
 import { NavLink } from 'react-router-dom';
 import { CartProductContext } from "../../services/context";
 import { useLanguage } from "../../services/LanguageContext";
-import Cart from "../Cart/Cart";
+import Cart from "../Cart/cart";
 import { SearchBar } from "./components/SearchBar";
 import "./navbar.css";
 import NavbarSkeleton from "./NavbarSkeleton.jsx";

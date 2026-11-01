@@ -97,8 +97,8 @@ export default function SigninForm({ setCheckAuth }) {
 
   const responseGoogle = async (authResult) => {
     try {
-      if (authResult['code']) {
-        const res = await googleLogin(authResult['code']);
+      if (authResult?.code) {
+        const res = await googleLogin(authResult.code);
         if (res?.data?.success) {
           await queryClient.invalidateQueries({ queryKey: ["authcheck"] });
           const isAdmin = await verifyAdminSession();
@@ -110,19 +110,33 @@ export default function SigninForm({ setCheckAuth }) {
           setErrorMessage("Only admin accounts can access this panel.");
           return;
         }
-        setErrorMessage("Login Error From Google");
+        setErrorMessage(res?.data?.message || "Google sign-in failed. Please try again.");
+      } else if (authResult?.error) {
+        setErrorMessage(authResult?.error_description || "Google Sign-In was cancelled or failed.");
       }
     } catch (error) {
-      console.error("Error while logging in with Google: ", error.message);
-      setErrorMessage("Google login failed. Please try again.");
+      console.error("Error while logging in with Google: ", error);
+      setErrorMessage(error?.response?.data?.message || "Google login failed. Please try again.");
     }
   };
 
-  const handleGoogleLogin = useGoogleLogin({
+  const googleLoginTrigger = useGoogleLogin({
     onSuccess: responseGoogle,
-    onError: responseGoogle,
+    onError: (err) => {
+      console.error("Google login error:", err);
+      setErrorMessage("Google Sign-In was cancelled or failed.");
+    },
     flow: "auth-code"
   });
+
+  const handleGoogleLogin = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setErrorMessage("Google OAuth is not configured yet. Please set VITE_GOOGLE_CLIENT_ID in your admin .env file.");
+      return;
+    }
+    googleLoginTrigger();
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">

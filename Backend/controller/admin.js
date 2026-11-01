@@ -38,9 +38,10 @@ export const getProducts = async (req, res) => {
 
 export const editproduct = async (req, res) => {
   const { id, images, name, price, stock, description, category } = req.body;
+  const productId = id || req.body._id;
 
   try {
-    const product = await PRODUCT.findById(id);
+    const product = await PRODUCT.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: "Product Not Found" });
     }
@@ -50,7 +51,7 @@ export const editproduct = async (req, res) => {
     if (stock !== undefined) product.stock = Number(stock);
     if (description) product.description = normalizeMultilingualField(description);
     if (category) product.category = category;
-    if (images) product.images = images;
+    if (Array.isArray(images)) product.images = images;
 
     await product.save();
     return res.json({ success: true, message: "Product Edited successfully" });

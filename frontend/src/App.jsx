@@ -29,10 +29,10 @@ const Stats = lazy(() => import("./Sections/About/Parts/stats").then(m => ({ def
 const Mission = lazy(() => import("./Sections/About/Parts/Mission").then(m => ({ default: m.Mission })));
 const MeetTeam = lazy(() => import("./Sections/About/Parts/MeetTeam").then(m => ({ default: m.MeetTeam })));
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "316084868865-6cm9ag49f38mgqp25ttja2i61cbjbl6l.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 const GoogleAuthWrapper = ({ children }) => (
-  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || "not-configured.apps.googleusercontent.com"}>
     {children}
   </GoogleOAuthProvider>
 );

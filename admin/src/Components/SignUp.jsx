@@ -91,22 +91,38 @@ export default function SignupForm() {
   };
   const responseGoogle = async (authResult) => {
     try {
-      if (authResult['code']){
-        const res = await googleLogin(authResult['code']);
-        if (res?.data?.success){
+      if (authResult?.code) {
+        const res = await googleLogin(authResult.code);
+        if (res?.data?.success) {
           return navigate("/");
         }
-        setErrorMessage("Login Error From google")
+        setErrorMessage(res?.data?.message || "Google sign-up failed. Please try again.");
+      } else if (authResult?.error) {
+        setErrorMessage(authResult?.error_description || "Google Sign-Up was cancelled or failed.");
       }
     } catch (error) {
-      console.error("Error while logging in with Google: ", error.message);
+      console.error("Error while signing up with Google: ", error);
+      setErrorMessage(error?.response?.data?.message || "Google registration failed. Please try again.");
     }
-  }
-  const handleGoogleLogin = useGoogleLogin({
+  };
+
+  const googleLoginTrigger = useGoogleLogin({
     onSuccess: responseGoogle,
-    onError: responseGoogle,
+    onError: (err) => {
+      console.error("Google Login Error:", err);
+      setErrorMessage("Google Sign-Up was cancelled or failed.");
+    },
     flow: "auth-code"
-  })
+  });
+
+  const handleGoogleLogin = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setErrorMessage("Google OAuth is not configured yet. Please set VITE_GOOGLE_CLIENT_ID in your admin .env file.");
+      return;
+    }
+    googleLoginTrigger();
+  };
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 rounded-lg">

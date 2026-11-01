@@ -21,7 +21,11 @@ export const ShopbyCategory = ({loadinguser}) =>{
         "Grains": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=300&h=300&fit=crop",
         "Pulses": "https://images.unsplash.com/photo-1515942400420-2b98fed1f515?w=300&h=300&fit=crop",
         "Spices": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=300&h=300&fit=crop",
-        "Other": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop"
+        "Dry Fruits": "https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=300&h=300&fit=crop",
+        "Edible Oils & Ghee": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&h=300&fit=crop",
+        "Snacks & Beverages": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=300&h=300&fit=crop",
+        "Bakery & Breads": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&h=300&fit=crop",
+        "Groceries & Staples": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop"
     };
 
     const dynamicCategories = useMemo(() => {
@@ -39,7 +43,7 @@ export const ShopbyCategory = ({loadinguser}) =>{
             Categoryname: catName,
             no_of_items: counts[catName] || 0,
             img_link: categoryConfig[catName]
-        })).filter(cat => cat.no_of_items > 0 || ["Vegetables", "Fruits", "Grains"].includes(cat.Categoryname)); // Always show top categories
+        })).filter(cat => cat.no_of_items > 0 || ["Vegetables", "Fruits", "Grains", "Pulses", "Spices"].includes(cat.Categoryname)); // Always show top categories
     }, [productsData]);
 
     return (loadinguser || isLoading) ? <CategorySection loading={true} /> : (
@@ -60,4 +64,4 @@ export const ShopbyCategory = ({loadinguser}) =>{
             </div>
         </div>
     </div>)
-}
+}

@@ -32,6 +32,9 @@ const corsOriginCheck = (origin, callback) => {
   if (!origin) return callback(null, true);
   if (
     allowedOrigins.includes(origin) ||
+    origin === process.env.client_url ||
+    /\.vercel\.app$/.test(origin) ||
+    /\.netlify\.app$/.test(origin) ||
     /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
   ) {
     return callback(null, true);

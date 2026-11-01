@@ -2,7 +2,7 @@ import { getuser, setuserandcookies } from "../services/auth.js";
 import USER from "../models/user.js"
 import axios from "axios"
 import bcrypt from "bcrypt"
-import {oauth2Client} from "../services/googleAuth.js"
+import { getOAuth2Client, oauth2Client } from "../services/googleAuth.js";
 import { sendVendorApplicationMail, sendVerificationMail } from "../emails/sendMail.js";
 import PRODUCT from "../models/product.js";
 
@@ -101,34 +101,73 @@ export const verify = (req,res) => {
     }
 }
 
-export const googleLogin = async (req,res) => {
+export const googleLogin = async (req, res) => {
     try {
-        const {code} = req.query;
+        const code = req.query.code || req.body?.code;
         if (!code) {
-            return res.status(400).send({success: false, message: "Authorization code is missing"});
+            return res.status(400).json({ success: false, message: "Authorization code is missing" });
         }
-        const googleres = await oauth2Client.getToken(code);
-        oauth2Client.setCredentials(googleres.tokens);
-        const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`);
-        const {email, name } = userRes.data;
-        let user = await USER.findOne({email});
-        if (!user){
-            const newUser = await USER.create({
+
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret) {
+            return res.status(500).json({
+                success: false,
+                message: "Google OAuth is not configured on the server. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to Backend/.env"
+            });
+        }
+
+        const client = getOAuth2Client();
+        const googleres = await client.getToken(code);
+        client.setCredentials(googleres.tokens);
+
+        const userRes = await axios.get(
+            `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleres.tokens.access_token}`
+        );
+        const { email, name, picture } = userRes.data;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Could not retrieve email from Google" });
+        }
+
+        let user = await USER.findOne({ email });
+        if (!user) {
+            user = await USER.create({
                 email,
-                name,
+                name: name || email.split("@")[0],
                 authProvider: "google",
                 isVerified: true,
                 role: "customer"
             });
-            user = newUser;
+        } else {
+            if (!user.isVerified) {
+                user.isVerified = true;
+                await user.save();
+            }
         }
+
         const token = setuserandcookies(res, user);
-        res.send({success: true, user: {email, name, token, role: user.role}})
+        return res.status(200).json({
+            success: true,
+            user: {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                token,
+                role: user.role,
+                picture
+            }
+        });
     } catch (error) {
-        console.error("Error while authenticating user: ", error.message);
-        res.status(500).send({success: false, message: "Error while authenticating user", error: error.message});
+        console.error("Error while authenticating with Google:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Error while authenticating with Google",
+            error: error.message
+        });
     }
-}
+};
 
 export const authCheck = async (req,res) => {
     try {
