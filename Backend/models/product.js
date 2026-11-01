@@ -51,6 +51,11 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    // AI Vector Store karne ke liye field
+    embedding: {
+        type: [Number],
+        default: []
+    },
     ratings: {
         average: {
             type: Number,

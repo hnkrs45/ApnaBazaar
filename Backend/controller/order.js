@@ -7,9 +7,9 @@ import USER from '../models/user.js';
 import { generateOrderId } from '../services/generateOrderId.js';
 import { sendOrderConfirmation } from '../emails/sendMail.js';
 
-const instance = new Razorpay({
-  key_id: process.env.RAZORPAY_ID_KEY,
-  key_secret: process.env.RAZORPAY_SECRET_KEY
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_dummyKey123",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "dummySecret123",
 });
 
 export const CreateOrder = async (req, res) => {
