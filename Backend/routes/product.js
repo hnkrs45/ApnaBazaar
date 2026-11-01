@@ -7,7 +7,7 @@ import {
   semanticSearch,
   getSimilarProducts
 } from "../controller/product.js";
-import { aiSearchLimiter } from "../index.js";
+import { aiSearchLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 

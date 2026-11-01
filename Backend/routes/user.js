@@ -18,7 +18,7 @@ import {
   deleteReview
 } from "../controller/user.js";
 import { auth } from "../services/auth.js";
-import { authLimiter } from "../index.js";
+import { authLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 

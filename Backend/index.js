@@ -3,12 +3,11 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { urlencoded } from "express";
-import helmet from "helmet";
 import http from "http";
 import mongoose from "mongoose";
-import { rateLimit } from "express-rate-limit";
 import { Server } from "socket.io";
 import { connect } from "./connection/connection.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
 import admin from "./routes/admin.js";
 import message from "./routes/message.js";
 import order from "./routes/order.js";
@@ -21,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 const url = process.env.MONGO_URL || "mongodb://localhost:27017/E-Commerce";
 
 // ──────────────────────────────────────────────────────────
-// Allowed Origins — EXACT list only (no wildcards in prod)
+// Allowed Origins — EXACT list only (no wildcard origins in prod)
 // ──────────────────────────────────────────────────────────
 const allowedOrigins = [
   "https://apna-bazaar-o811.vercel.app",
@@ -35,26 +34,31 @@ const allowedOrigins = [
 ];
 
 const isAllowedOrigin = (origin) => {
-  if (!origin) return true; // same-origin / server-to-server requests
+  if (!origin) return true; // Server-to-server or same-origin
   if (allowedOrigins.includes(origin)) return true;
   if (process.env.client_url && origin === process.env.client_url) return true;
-  // In development allow any localhost port
   if (
     process.env.NODE_ENV !== "production" &&
     /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
-  ) return true;
+  ) {
+    return true;
+  }
   return false;
 };
 
 // ──────────────────────────────────────────────────────────
-// Security Headers (Helmet)
+// Security Headers Middleware (Zero-dependency replacement for Helmet)
 // ──────────────────────────────────────────────────────────
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // allow image CDN
-    contentSecurityPolicy: false, // CSP handled separately if needed
-  })
-);
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-XSS-Protection", "0");
+  res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  res.removeHeader("X-Powered-By");
+  next();
+});
 
 // ──────────────────────────────────────────────────────────
 // CORS
@@ -74,37 +78,7 @@ app.use(
   })
 );
 
-// ──────────────────────────────────────────────────────────
-// Rate Limiters
-// ──────────────────────────────────────────────────────────
-/** Strict limiter for auth endpoints (brute-force protection) */
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many attempts. Please try again in 15 minutes." },
-});
-
-/** Moderate limiter for AI search (cost + abuse protection) */
-export const aiSearchLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many search requests. Please slow down." },
-});
-
-/** General API limiter */
-export const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many requests. Please try again later." },
-});
-
-// Apply general limiter to all routes
+// Apply general API rate limiter
 app.use(generalLimiter);
 
 // ──────────────────────────────────────────────────────────
@@ -127,19 +101,19 @@ app.use(async (req, res, next) => {
     console.error("Database connection error:", err.message);
     res.status(503).json({
       success: false,
-      message: "Service temporarily unavailable. Please try again.",
+      message: "Service temporarily unavailable. Please try again."
     });
   }
 });
 
 // ──────────────────────────────────────────────────────────
-// Health Check
+// Root Health Check Route
 // ──────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "ApnaBazaar API is running",
-    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected"
   });
 });
 
@@ -159,7 +133,6 @@ app.use("/api/message", message);
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
   const status = err.status || err.statusCode || 500;
-  // Never leak internal error details to client in production
   const message =
     process.env.NODE_ENV === "production"
       ? "Internal server error"
@@ -168,8 +141,7 @@ app.use((err, req, res, next) => {
 });
 
 // ──────────────────────────────────────────────────────────
-// Socket.io (works in local dev; stateless on Vercel — chat
-// requires a persistent host like Railway for production)
+// Socket.io & Local Server Setup
 // ──────────────────────────────────────────────────────────
 export const server = http.createServer(app);
 export const io = new Server(server, {
@@ -177,8 +149,8 @@ export const io = new Server(server, {
     origin: (origin, callback) =>
       isAllowedOrigin(origin) ? callback(null, true) : callback(new Error("Not allowed")),
     methods: ["GET", "POST"],
-    credentials: true,
-  },
+    credentials: true
+  }
 });
 
 const userSocketMap = {};
@@ -196,7 +168,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Start listening only outside Vercel (local development)
+// Start listening only in non-serverless environments (local development)
 if (!process.env.VERCEL) {
   server.listen(PORT, () => {
     connect(url);
