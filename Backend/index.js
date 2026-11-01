@@ -1,7 +1,7 @@
+import "dotenv/config";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 import express, { urlencoded } from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -13,7 +13,7 @@ import product from "./routes/product.js";
 import user from "./routes/user.js";
 import vendor from "./routes/vendor.js";
 
-dotenv.config();
+
 
 export const app = express();
 const PORT = process.env.PORT || 3000;
