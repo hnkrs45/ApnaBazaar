@@ -1,23 +1,40 @@
+import crypto from "crypto";
 import { getuser, setuserandcookies } from "../services/auth.js";
 import USER from "../models/user.js"
 import axios from "axios"
 import bcrypt from "bcrypt"
-import { getOAuth2Client, oauth2Client } from "../services/googleAuth.js";
+import { getOAuth2Client } from "../services/googleAuth.js";
 import { sendVendorApplicationMail, sendVerificationMail } from "../emails/sendMail.js";
 import PRODUCT from "../models/product.js";
 
-export const signup = async (req,res) => {
+const isProduction = () => process.env.NODE_ENV === "production";
+
+export const signup = async (req, res) => {
     try {
-        const {name, email, phone, password} = req.body;
-        const user = await USER.findOne({email});
-        if (user){
-            return res.json({success: false, message: "This Email already registered"})
+        const { name, email, phone, password } = req.body;
+
+        // ── Server-side input validation ──
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
         }
-        const saltround = 11;
-        const hashedpass = await bcrypt.hash(password, saltround);
-        const verificationToken =  Math.floor(100000 + Math.random() * 900000)
-        const verificationTokenExpiry = Date.now() + 15*60*1000 // 15 min
-        
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: "Invalid email format" });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+        }
+
+        const existing = await USER.findOne({ email: email.toLowerCase().trim() });
+        if (existing) {
+            return res.status(409).json({ success: false, message: "This email is already registered" });
+        }
+
+        const hashedpass = await bcrypt.hash(password, 12);
+
+        // ── Fix B09: cryptographically strong token instead of 6-digit OTP ──
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 min
+
         const newUser = await USER.create({
             name,
             email,
@@ -27,54 +44,72 @@ export const signup = async (req,res) => {
             verificationTokenExpiry,
             authProvider: "local",
             role: "customer"
-        })
+        });
 
-        const token = setuserandcookies(res, newUser)
-        
+        const token = setuserandcookies(res, newUser);
+
         try {
             await sendVerificationMail(email, verificationToken);
         } catch (mailError) {
             console.error("Error sending verification mail:", mailError);
-            // We still registered the user, but mail failed.
         }
 
-        return res.json({success: true, message: "user registered successfully", user: {name, email, phone, role: newUser.role}, token});
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully",
+            user: { name, email, phone, role: newUser.role },
+            token
+        });
     } catch (error) {
         console.error("Signup error:", error);
-        res.status(500).json({success: false, message: error.message});
+        res.status(500).json({ success: false, message: isProduction() ? "Registration failed" : error.message });
     }
 }
 
-export const login = async (req,res) => {
-    const {email , password} = req.body;
+export const login = async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ success: false, message: "Email and password are required" });
+    }
     try {
-        const user = await USER.findOne({email});
-
-        if (!user){
-            return res.status(404).json({success: false, message: "User not registered"});
+        const user = await USER.findOne({ email: email.toLowerCase().trim() });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not registered" });
         }
 
-        const UserPassword = user.password;
-        const isMatch = await bcrypt.compare(password, UserPassword);
-        if (!isMatch){
-            return res.status(401).json({success: false, message: "Incorrect password"});
-        } else {
-            const token = setuserandcookies(res, user);
-            return res.status(200).json({success: true, message: "User logged in successfully", token, user: { name: user.name, email: user.email, role: user.role }});
+        if (!user.password) {
+            return res.status(400).json({ success: false, message: "Please sign in with Google" });
         }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: "Incorrect password" });
+        }
+
+        const token = setuserandcookies(res, user);
+        return res.status(200).json({
+            success: true,
+            message: "User logged in successfully",
+            token,
+            user: { name: user.name, email: user.email, role: user.role }
+        });
     } catch (error) {
-        return res.status(500).json({success: false, message: error.message || "Internal server error"});
+        console.error("Login error:", error);
+        return res.status(500).json({ success: false, message: isProduction() ? "Login failed" : error.message });
     }
 }
 
-export const verifyEmail = async (req,res) => {
+export const verifyEmail = async (req, res) => {
     try {
-        const {Token} = req.query
-        const user = await USER.findOne({verificationToken: Token});
-        if (!user){
-            return res.status(400).json({ success: false, message: "Invalid or expired verification link" })
+        const { Token } = req.query;
+        if (!Token) {
+            return res.status(400).json({ success: false, message: "Verification token is required" });
         }
-        if (user?.verificationTokenExpiry < Date.now()){
+        const user = await USER.findOne({ verificationToken: Token });
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid or expired verification link" });
+        }
+        if (user.verificationTokenExpiry < Date.now()) {
             return res.status(400).json({ success: false, message: "Verification link has expired" });
         }
 
@@ -83,21 +118,22 @@ export const verifyEmail = async (req,res) => {
             { $set: { isVerified: true }, $unset: { verificationToken: "", verificationTokenExpiry: "" } }
         );
 
-        return res.status(200).json({ success: true, message: "User verified successfully" });
+        return res.status(200).json({ success: true, message: "Email verified successfully" });
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        console.error("verifyEmail error:", error);
+        return res.status(500).json({ success: false, message: isProduction() ? "Verification failed" : error.message });
     }
 }
 
-export const verify = (req,res) => {
+export const verify = (req, res) => {
     try {
-        const {token} = req.body;
+        const { token } = req.body;
         if (!token) return res.status(400).json({ success: false, message: "Token is required" });
         const user = getuser(token);
         if (!user) return res.status(401).json({ success: false, message: "Invalid or expired token" });
-        return res.status(200).json({ success: true, message: "User is verified", user })
+        return res.status(200).json({ success: true, message: "User is verified", user });
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: isProduction() ? "Verification failed" : error.message });
     }
 }
 
@@ -114,7 +150,7 @@ export const googleLogin = async (req, res) => {
         if (!clientId || !clientSecret) {
             return res.status(500).json({
                 success: false,
-                message: "Google OAuth is not configured on the server. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to Backend/.env"
+                message: "Google OAuth is not configured on the server."
             });
         }
 
@@ -150,48 +186,44 @@ export const googleLogin = async (req, res) => {
         const token = setuserandcookies(res, user);
         return res.status(200).json({
             success: true,
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                token,
-                role: user.role,
-                picture
-            }
+            user: { id: user._id, email: user.email, name: user.name, token, role: user.role, picture }
         });
     } catch (error) {
-        console.error("Error while authenticating with Google:", error.message);
+        console.error("Google auth error:", error.message);
         return res.status(500).json({
             success: false,
-            message: "Error while authenticating with Google",
-            error: error.message
+            message: isProduction() ? "Google authentication failed" : error.message
         });
     }
 };
 
-export const authCheck = async (req,res) => {
+export const authCheck = async (req, res) => {
     try {
-        const token = req?.cookies?.token || req?.cookies?.admin_token || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : req.headers.authorization);
-        if (!token){
-            return res.send({isAuthenticate: false, message: "Unauthorized Access: No token"})
+        const token =
+            req?.cookies?.token ||
+            req?.cookies?.admin_token ||
+            (req.headers.authorization?.startsWith("Bearer ")
+                ? req.headers.authorization.split(" ")[1]
+                : null);
+        if (!token) {
+            return res.json({ isAuthenticate: false, message: "Unauthorized" });
         }
-        const decodeUser = getuser(token)
-        if (!decodeUser?.email){
-            return res.send({isAuthenticate: false, message: "Unauthorized Access: Invalid token"})
+        const decodeUser = getuser(token);
+        if (!decodeUser?.email) {
+            return res.json({ isAuthenticate: false, message: "Invalid token" });
         }
-        const email = decodeUser.email
-        const user = await USER.findOne({email}).select("-password");
-        if (!user){
-            return res.send({isAuthenticate: false, message: "Unauthorized Access: User not found"})
+        const user = await USER.findOne({ email: decodeUser.email }).select("-password");
+        if (!user) {
+            return res.json({ isAuthenticate: false, message: "User not found" });
         }
-        return res.send({ isAuthenticate: true, message: "Authenticate user", user, role: user.role })
+        return res.json({ isAuthenticate: true, message: "Authenticated", user, role: user.role });
     } catch (error) {
-        res.send({ isAuthenticate: false, message: error.message })
+        console.error("authCheck error:", error);
+        return res.json({ isAuthenticate: false, message: "Authentication check failed" });
     }
 }
 
-export const updateWishlist = async (req,res) => {
-    console.log(req.user)
+export const updateWishlist = async (req, res) => {
     try {
         const user = await USER.findByIdAndUpdate(
             req.user._id,
@@ -200,11 +232,12 @@ export const updateWishlist = async (req,res) => {
         ).populate("wishlist");
         res.json(user.wishlist);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error("updateWishlist error:", err);
+        res.status(500).json({ message: isProduction() ? "Failed to update wishlist" : err.message });
     }
 }
 
-export const deleteWishlist = async (req,res) => {
+export const deleteWishlist = async (req, res) => {
     try {
         const user = await USER.findByIdAndUpdate(
             req.user._id,
@@ -213,280 +246,240 @@ export const deleteWishlist = async (req,res) => {
         ).populate("wishlist");
         res.json(user.wishlist);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error("deleteWishlist error:", err);
+        res.status(500).json({ message: isProduction() ? "Failed to update wishlist" : err.message });
     }
 }
 
-export const logout = (req,res) => {
-    try{
-        const isProduction = process.env.NODE_ENV === "production";
+export const logout = (req, res) => {
+    try {
+        const prod = process.env.NODE_ENV === "production";
         const cookieOptions = {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "none" : "lax",
+            secure: prod,
+            sameSite: prod ? "none" : "lax",
         };
         res.clearCookie("token", cookieOptions);
         res.clearCookie("admin_token", cookieOptions);
-        res.status(200).json({ message: "Logout successful" , success: true});
+        res.status(200).json({ message: "Logout successful", success: true });
     } catch (err) {
-        res.status(500).json({ message: err.message , success: false});
+        res.status(500).json({ message: isProduction() ? "Logout failed" : err.message, success: false });
     }
 }
 
-export const getWishlist = async (req,res) => {
+export const getWishlist = async (req, res) => {
     try {
-        const data = await USER.findById(req.user._id).populate("wishlist")
-        return res.status(200).json({success: true, data})
+        const data = await USER.findById(req.user._id).populate("wishlist");
+        return res.status(200).json({ success: true, data });
     } catch (error) {
-        res.status(500).json({ message: error.message , success: false});
+        console.error("getWishlist error:", error);
+        res.status(500).json({ message: isProduction() ? "Failed to fetch wishlist" : error.message, success: false });
     }
 }
 
-export const updateUser = async (req,res) => {
+export const updateUser = async (req, res) => {
     const formData = req.body;
     const data = {
         name: `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || formData.name,
         email: formData.email,
         phone: formData.phone
-    }
+    };
     try {
         const updatedUser = await USER.findByIdAndUpdate(
             req.user._id,
-            {$set : data},
-            {new: true, runValidators: true}
-        )
+            { $set: data },
+            { new: true, runValidators: true }
+        ).select("-password");
 
         res.status(200).json({ success: true, message: "User updated successfully", user: updatedUser });
     } catch (error) {
-        res.status(500).json({ message: error.message , success: false});
+        console.error("updateUser error:", error);
+        res.status(500).json({ message: isProduction() ? "Update failed" : error.message, success: false });
     }
 }
 
 export const addVendor = async (req, res) => {
-  try {
-    const { companyName, address } = req.body;
-    const userId = req.user?._id;
-
-    console.log("AddVendor request - User ID:", userId, "Body:", req.body);
-
-    if (!companyName || !address) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Company name and address are required" });
-    }
-
-    const user = await USER.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    if (user.role === "vendor") {
-      console.log(`User ${userId} is already a vendor, rejecting application.`);
-      return res
-        .status(400)
-        .json({ success: false, message: "You are already a vendor" });
-    }
-
-    user.vendor = {
-      companyName,
-      address,
-      status: "Pending",
-      appliedAt: new Date(),
-    };
-    user.role = "vendor";
-
-    await user.save();
-
     try {
-      await sendVendorApplicationMail("arshadmansuri572@gmail.com", user?.name, user?.email)
-    } catch (mailError) {
-      console.error("Error sending vendor application mail:", mailError);
-      // We still return success because the application was saved in the DB
-    }
+        const { companyName, address } = req.body;
+        const userId = req.user?._id;
 
-    res.status(200).json({
-      success: true,
-      message: "Vendor application submitted successfully",
-      vendor: user.vendor,
-    });
-  } catch (err) {
-    console.error("Error in addVendor:", err);
-    res.status(500).json({ success: false, message: err.message });
-  }
+        if (!companyName || !address) {
+            return res.status(400).json({ success: false, message: "Company name and address are required" });
+        }
+
+        const user = await USER.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        if (user.role === "vendor") {
+            return res.status(400).json({ success: false, message: "You are already a vendor" });
+        }
+
+        user.vendor = { companyName, address, status: "Pending", appliedAt: new Date() };
+        user.role = "vendor";
+        await user.save();
+
+        try {
+            await sendVendorApplicationMail("arshadmansuri572@gmail.com", user.name, user.email);
+        } catch (mailError) {
+            console.error("Error sending vendor application mail:", mailError);
+        }
+
+        res.status(200).json({ success: true, message: "Vendor application submitted successfully", vendor: user.vendor });
+    } catch (err) {
+        console.error("addVendor error:", err);
+        res.status(500).json({ success: false, message: isProduction() ? "Application failed" : err.message });
+    }
 };
 
-export const interection = async (req,res) => {
-    const data = req.body
-    console.log("Data",data)
+export const interection = async (req, res) => {
+    const data = req.body;
     try {
-        const user = await USER.findById(data?.user)
-        if (!user){
-            return res.status(404).json({success: false, message: "User Not Found"})
+        const userId = data?.user || req.user?._id;
+        const user = await USER.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User Not Found" });
         }
-        const userHistory = data?.products.map(product => {
-            return {
-                productID: product?.product?.productID,
-                event: {
-                    type: product?.event?.type,
-                    timeStamp: product?.event?.time
-                },
-                time: product?.time,
-                duration: product?.duration
-            }
-        })
-        console.log("user History",userHistory)
-        user.history = [...user.history, ...userHistory]
 
-        await user.save()
-        res.status(200).json({success: true, message: "Data saved Successfully"})
+        const userHistory = (data?.products || []).map(product => ({
+            productID: product?.product?.productID,
+            event: {
+                type: product?.event?.type,
+                timeStamp: product?.event?.time
+            },
+            time: product?.time,
+            duration: product?.duration
+        }));
+
+        // Cap history at 500 most recent entries to prevent document bloat
+        user.history = [...user.history, ...userHistory].slice(-500);
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Data saved successfully" });
     } catch (error) {
-        res.status(500).json({success: false, message: error.message})
+        console.error("interection error:", error);
+        res.status(500).json({ success: false, message: isProduction() ? "Failed to save data" : error.message });
     }
 }
 
-export const addRatingReview = async (req,res) => {
+export const addRatingReview = async (req, res) => {
     try {
-        const reviewData = req.body
-        const ProductID = reviewData?.productID
-        const product = await PRODUCT.findOne({_id: ProductID})
-        if (!product){
-            return res.status(404).json({success: false, message: "Product not found"})
+        const reviewData = req.body;
+        const ProductID = reviewData?.productID;
+
+        if (!ProductID || !reviewData.rating || !reviewData.review) {
+            return res.status(400).json({ success: false, message: "Product ID, rating, and review are required" });
         }
 
-        // Initialize ratings if undefined
-        if (!product.ratings) {
-            product.ratings = { average: 0, count: 0 };
-        }
-        if (typeof product.ratings.count !== 'number' || isNaN(product.ratings.count)) {
-            product.ratings.count = 0;
+        const product = await PRODUCT.findOne({ _id: ProductID });
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
         }
 
-        // Parse date safely
+        if (!product.ratings) product.ratings = { average: 0, count: 0 };
+
         let reviewDate = new Date();
         if (reviewData.date) {
             if (typeof reviewData.date === 'string' && reviewData.date.includes('/')) {
                 const parts = reviewData.date.split('/');
                 if (parts.length === 3) {
                     const parsed = new Date(parts[2], parts[1] - 1, parts[0]);
-                    if (!isNaN(parsed.getTime())) {
-                        reviewDate = parsed;
-                    }
+                    if (!isNaN(parsed.getTime())) reviewDate = parsed;
                 }
             } else {
                 const parsed = new Date(reviewData.date);
-                if (!isNaN(parsed.getTime())) {
-                    reviewDate = parsed;
-                }
+                if (!isNaN(parsed.getTime())) reviewDate = parsed;
             }
         }
 
         product.reviews = [...product.reviews, {
             user: reviewData.user,
             username: reviewData.name,
-            rating: reviewData.rating,
+            rating: Number(reviewData.rating),
             comment: reviewData.review,
             createdAt: reviewDate
-        }]
+        }];
 
-        let avgrating = 0 
-        product.reviews.map((review) => (
-            avgrating += review.rating
-        ))
-        
-        avgrating = avgrating / product.reviews.length;
+        const total = product.reviews.reduce((sum, r) => sum + r.rating, 0);
         product.ratings.count = product.reviews.length;
-        product.ratings.average = parseFloat(avgrating.toFixed(1));
+        product.ratings.average = parseFloat((total / product.reviews.length).toFixed(1));
 
-        await product.save()
-        return res.status(200).json({ success: true, message: "Review added successfully"})
+        await product.save();
+        return res.status(200).json({ success: true, message: "Review added successfully" });
     } catch (error) {
-        res.status(500).json({success: false, message: error.message})
+        console.error("addRatingReview error:", error);
+        res.status(500).json({ success: false, message: isProduction() ? "Failed to add review" : error.message });
     }
 }
 
 export const editReview = async (req, res) => {
-  try {
-    const data = req.body
-    const { productID, user, rating, review } = data
+    try {
+        const { productID, user, rating, review } = req.body;
 
-    const product = await PRODUCT.findById(productID)
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" })
+        if (!productID || !rating || !review) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const product = await PRODUCT.findById(productID);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        const reviewIndex = product.reviews.findIndex(r => r.user.toString() === user);
+        if (reviewIndex === -1) {
+            return res.status(404).json({ success: false, message: "Review not found for this user" });
+        }
+
+        product.reviews[reviewIndex].rating = Number(rating);
+        product.reviews[reviewIndex].comment = review;
+        product.reviews[reviewIndex].createdAt = new Date();
+
+        const total = product.reviews.reduce((sum, r) => sum + r.rating, 0);
+        product.ratings.count = product.reviews.length;
+        product.ratings.average = parseFloat((total / product.reviews.length).toFixed(1));
+
+        await product.save();
+        return res.status(200).json({ success: true, message: "Review updated successfully", reviews: product.reviews });
+    } catch (error) {
+        console.error("editReview error:", error);
+        res.status(500).json({ success: false, message: isProduction() ? "Failed to update review" : error.message });
     }
-
-    const reviewIndex = product.reviews.findIndex(r => r.user.toString() === user)
-
-    if (reviewIndex === -1) {
-      return res.status(404).json({ success: false, message: "Review not found for this user" })
-    }
-
-    product.reviews[reviewIndex].rating = rating
-    product.reviews[reviewIndex].comment = review
-    product.reviews[reviewIndex].createdAt = new Date()
-
-    let avgrating = 0 
-    product.reviews.map((review) => (
-        avgrating += review.rating
-    ))
-    
-    avgrating = avgrating / product.reviews.length;
-    product.ratings.count = product.reviews.length;
-    product.ratings.average = parseFloat(avgrating.toFixed(1));
-
-    await product.save()
-
-    return res.status(200).json({
-      success: true,
-      message: "Review updated successfully",
-      reviews: product.reviews
-    })
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message })
-  }
 }
 
 export const deleteReview = async (req, res) => {
-  try {
-    const { productID } = req.query
-    const userID = req?.user?._id
+    try {
+        const { productID } = req.query;
+        const userID = req?.user?._id;
 
-    const product = await PRODUCT.findById(productID)
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" })
+        if (!productID) {
+            return res.status(400).json({ success: false, message: "Product ID is required" });
+        }
+
+        const product = await PRODUCT.findById(productID);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        const updatedReviews = product.reviews.filter(r => r.user.toString() !== userID.toString());
+        if (updatedReviews.length === product.reviews.length) {
+            return res.status(404).json({ success: false, message: "Review not found" });
+        }
+
+        product.reviews = updatedReviews;
+
+        if (product.reviews.length === 0) {
+            product.ratings = { average: 0, count: 0 };
+        } else {
+            const total = product.reviews.reduce((sum, r) => sum + r.rating, 0);
+            product.ratings.count = product.reviews.length;
+            product.ratings.average = parseFloat((total / product.reviews.length).toFixed(1));
+        }
+
+        await product.save();
+        return res.status(200).json({ success: true, message: "Review deleted successfully", reviews: product.reviews });
+    } catch (error) {
+        console.error("deleteReview error:", error);
+        res.status(500).json({ success: false, message: isProduction() ? "Failed to delete review" : error.message });
     }
-
-    // Filter out the user's review
-    const updatedReviews = product.reviews.filter(
-      (r) => r.user.toString() !== userID.toString()
-    )
-
-    // If no change, review not found
-    if (updatedReviews.length === product.reviews.length) {
-      return res.status(404).json({ success: false, message: "Review not found" })
-    }
-
-    product.reviews = updatedReviews
-
-    if (product.reviews.length === 0) {
-      product.ratings.average = 0;
-      product.ratings.count = 0;
-    } else {
-      let avgrating = 0
-      product.reviews.map((review) => (
-          avgrating += review.rating
-      ))
-      product.ratings.count = product.reviews.length;
-      product.ratings.average = parseFloat((avgrating / product.reviews.length).toFixed(1));
-    }
-
-    await product.save()
-
-    return res.status(200).json({
-      success: true,
-      message: "Review deleted successfully",
-      reviews: product.reviews
-    })
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message })
-  }
 }

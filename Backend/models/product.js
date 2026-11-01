@@ -79,17 +79,14 @@ const productSchema = new mongoose.Schema({
     ],
     isActive: {
         type: Boolean,
-        default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
+        default: true,
+        index: true
     }
 }, {timestamps: true})
+
+// Optimize query performance
+productSchema.index({ isActive: 1, category: 1 });
+productSchema.index({ vendor: 1, isActive: 1 });
 
 const PRODUCT = mongoose.model("Product", productSchema);
 

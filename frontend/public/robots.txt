@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /checkout
+Disallow: /orders
+Disallow: /vendor/
+Disallow: /chat/
+
+Sitemap: https://apna-bazaar-o811.vercel.app/sitemap.xml
+

@@ -28,6 +28,7 @@ const Story = lazy(() => import("./Sections/About/Parts/Story").then(m => ({ def
 const Stats = lazy(() => import("./Sections/About/Parts/stats").then(m => ({ default: m.Stats })));
 const Mission = lazy(() => import("./Sections/About/Parts/Mission").then(m => ({ default: m.Mission })));
 const MeetTeam = lazy(() => import("./Sections/About/Parts/MeetTeam").then(m => ({ default: m.MeetTeam })));
+const NotFound = lazy(() => import("./Sections/NotFound/NotFound"));
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
@@ -129,7 +130,10 @@ const App = () => {
     const handleBeforeUnload = () => {
       if (dataForMl?.products?.length > 0) {
         const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-        navigator.sendBeacon(`${backendUrl}/api/user/interaction`, JSON.stringify(dataForMl));
+        const blob = new Blob([JSON.stringify(dataForMl)], { type: "application/json" });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(`${backendUrl}/api/user/interaction`, blob);
+        }
         setDataForMl({ user: userId, products: [], currentView: null });
       }
     };
@@ -195,6 +199,7 @@ const App = () => {
           <Route path="/orders/:orderId" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><TrackOrder/></ProtectedRoute>} />
           <Route path="/search" element={<Search/>} />
           <Route path="/chat/:userId" element={<ProtectedRoute isLoading={isLoading} checkAuth={checkAuth}><Chat/></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
 

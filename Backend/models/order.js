@@ -46,9 +46,13 @@ const orderSchema = new mongoose.Schema({
             comment: { type: String }
         }
     ],
-    totalAmount: { type: Number, required: true },
-    createdAt: { type: Date, default: Date.now }
+    totalAmount: { type: Number, required: true }
 }, {timestamps: true})
+
+// Optimize query performance
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ orderId: 1 }, { unique: true });
+orderSchema.index({ "items.product": 1 });
 
 const ORDER = mongoose.model("Order", orderSchema)
 

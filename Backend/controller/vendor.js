@@ -242,7 +242,12 @@ export const updateOrderStatus = async (req,res) => {
 
     await vendor.save();
 
-    await sendOrderStatusMail(to, name, orderId, status)
+    // Fix B20: wrap mail in try-catch
+    try {
+      await sendOrderStatusMail(to, name, orderId, status);
+    } catch (mailErr) {
+      console.error('Error sending order status mail:', mailErr.message);
+    }
 
     return res.json({
       success: true,
@@ -331,9 +336,6 @@ export const getVendorsOrdersByCategory = async (req, res) => {
 
     const result = await ORDER.aggregate([
       {
-        $match: { vendor: vendorId }
-      },
-      {
         $unwind: "$items"
       },
       {
@@ -346,6 +348,11 @@ export const getVendorsOrdersByCategory = async (req, res) => {
       },
       {
         $unwind: "$product"
+      },
+      {
+        $match: {
+          "product.vendor": vendorId
+        }
       },
       {
         $group: {

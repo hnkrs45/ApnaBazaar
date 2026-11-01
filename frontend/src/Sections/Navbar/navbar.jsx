@@ -77,7 +77,7 @@ export const NavBar = () => {
                                 </div>
                                 <NavLink to="/profile">
                                     <div className="w-[36px] h-[36px] relative rounded-full group">
-                                        <img className="cursor-pointer w-[36px] h-[36px] rounded-full object-cover" src="/profile.jpg" alt="" />
+                                        <img className="cursor-pointer w-[36px] h-[36px] rounded-full object-cover" src="/profile.jpg" alt="User Profile" />
                                         <div className="absolute top-[45px] left-1/2 -translate-x-1/2 w-fit hidden bg-black/80 backdrop-blur-sm group-hover:block px-2 py-1 rounded shadow-lg">
                                             <p className="text-white text-[10px] whitespace-nowrap">{t('nav.profile')}</p>
                                         </div>
@@ -86,7 +86,7 @@ export const NavBar = () => {
                                 <button
                                     onClick={async () => {
                                         const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-                                        await fetch(`${backendUrl}/api/user/logout`, { credentials: "include" });
+                                        await fetch(`${backendUrl}/api/user/logout`, { method: "POST", credentials: "include" });
                                         window.location.href = "/";
                                     }}
                                     className="px-4 py-1.5 bg-red-500 text-white rounded-full text-[12px] font-bold hover:bg-red-600 transition-all shadow-sm"
@@ -118,7 +118,7 @@ export const NavBar = () => {
                                 </NavLink>
                             </div>
                         )}
-                        <div onClick={handleCartMenu} className="relative flex items-center justify-center p-2 hover:bg-gray-100 rounded-full transition-all cursor-pointer">
+                        <div onClick={handleCartMenu} role="button" aria-label="Open Shopping Cart" className="relative flex items-center justify-center p-2 hover:bg-gray-100 rounded-full transition-all cursor-pointer">
                             <BsCart3 className="cart-icon text-[22px] text-gray-700" />
                             {cartItems.length !== 0 ? (
                                 <div className="min-w-[18px] h-[18px] rounded-full bg-red-600 flex justify-center items-center p-[3px] absolute top-0 right-0 border-2 border-white">
@@ -126,7 +126,7 @@ export const NavBar = () => {
                                 </div>
                             ) : ""}
                         </div>
-                        <Icon onClick={() => setMenu(!menu)} className="menu-icon hidden text-2xl font-medium" />
+                        <Icon onClick={() => setMenu(!menu)} role="button" aria-label="Toggle Navigation Menu" className="menu-icon hidden text-2xl font-medium" />
                     </div>
                     <div className={`absolute top-0 right-0 duration-300 ease-linear transition-transform ${cmenu ? "translate-x-0" : "translate-x-[100%]"}`}>
                         <Cart cmenu={cmenu} setCmenu={setCmenu} />

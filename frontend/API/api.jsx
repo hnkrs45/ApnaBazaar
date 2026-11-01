@@ -55,7 +55,7 @@ export const deleteWishlist = (Productid) => {
 }
 
 export const logout = () => {
-    return api.get('/api/user/logout')
+    return api.post('/api/user/logout')
 }
 
 export const getOrders = () => {
@@ -115,7 +115,7 @@ export const getordersbycategory = () => {
 }
 
 export const userInteresctionDataServer = (data) => {
-    return api.post('/api/user/interection', data)
+    return api.post('/api/user/interaction', data)
 }
 
 export const RatingAndReview = (data) => {

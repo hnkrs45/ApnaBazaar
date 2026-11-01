@@ -82,7 +82,7 @@ export const SearchBar = () => {
         <div ref={dropdownRef} className="relative">
             <form
                 onSubmit={handleSearch}
-                className="search-bar relative h-[40px] bg-white flex items-center gap-3 rounded-full w-[35vw] border-solid border-[1.5px] border-gray-200 focus-within:border-organic-green-light focus-within:shadow-sm transition-all px-4"
+                className="search-bar relative h-[40px] bg-white flex items-center gap-2 sm:gap-3 rounded-full w-full max-w-[480px] sm:w-[35vw] border-solid border-[1.5px] border-gray-200 focus-within:border-organic-green-light focus-within:shadow-sm transition-all px-4"
             >
                 {loading ? (
                     <Loader2 width="18px" className="text-organic-green animate-spin" />

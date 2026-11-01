@@ -154,7 +154,8 @@ export const getAllOrders = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await USER.find().populate("orders", "totalAmount").lean();
+    // Fix B21: exclude password from user list
+    const users = await USER.find().select("-password").populate("orders", "totalAmount").lean();
     const formattedUsers = users.map((user) => {
       const totalSpent = (user.orders || []).reduce(
         (acc, order) => acc + (Number(order?.totalAmount) || 0),
@@ -168,7 +169,8 @@ export const getAllUsers = async (req, res) => {
     });
     return res.status(200).send({ success: true, message: "All Users", users: formattedUsers });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message || "Unable to get All Users" });
+    console.error("getAllUsers error:", error);
+    return res.status(500).json({ success: false, message: "Unable to get users" });
   }
 };
 

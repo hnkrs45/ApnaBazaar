@@ -7,9 +7,10 @@ import USER from '../models/user.js';
 import { generateOrderId } from '../services/generateOrderId.js';
 import { sendOrderConfirmation } from '../emails/sendMail.js';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_dummyKey123",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "dummySecret123",
+// ── Fix B04: Use correct env var names (matching .env file) ──
+const instance = new Razorpay({
+  key_id: process.env.RAZORPAY_ID_KEY,
+  key_secret: process.env.RAZORPAY_SECRET_KEY,
 });
 
 export const CreateOrder = async (req, res) => {
@@ -20,48 +21,41 @@ export const CreateOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order must contain at least one item" });
     }
 
-    let OrderData = {
-      user: user || req.user,
-      items,
-      shippingAddress,
-      paymentMethod,
-      deliveryMethod
-    };
+    // ── Fix B15: Batch-fetch all products in ONE query (no N+1) ──
+    const productIds = items.map(item => item.productID || item.productId || item._id || item.product);
+    const productDocs = await PRODUCT.find({ _id: { $in: productIds } });
+    const productMap = new Map(productDocs.map(p => [p._id.toString(), p]));
 
     let totalAmount = 0;
     const finalItems = [];
 
     for (const item of items) {
-      const pId = item.productID || item.productId || item._id || item.product;
-      const product = await PRODUCT.findById(pId);
+      const pId = (item.productID || item.productId || item._id || item.product)?.toString();
+      const product = productMap.get(pId);
       if (!product) {
         return res.status(400).json({ success: false, message: `Product not found for ID ${pId}` });
       }
       const quantity = Number(item.quantity) || 1;
       const price = Number(item.price || product.price) || 0;
       totalAmount += price * quantity;
-      finalItems.push({
-        product: product._id,
-        quantity,
-        price
-      });
+      finalItems.push({ product: product._id, quantity, price });
     }
 
     let delivery = totalAmount >= 499 ? 0 : 40;
     totalAmount += (totalAmount * 2) / 100; // 2% platform fee
-    if (OrderData?.deliveryMethod === 'Express') delivery = 60;
+    if (deliveryMethod === 'Express') delivery = 60;
     totalAmount += delivery;
     totalAmount = Math.round(totalAmount * 100) / 100;
 
-    const userId = OrderData.user?._id || req.user?._id;
+    const userId = user?._id || req.user?._id;
 
     if (paymentMethod === 'COD') {
       const newOrderData = {
         orderId: generateOrderId(),
         user: userId,
         items: finalItems,
-        shippingAddress: OrderData.shippingAddress,
-        deliveryMethod: OrderData.deliveryMethod || "Standard",
+        shippingAddress,
+        deliveryMethod: deliveryMethod || "Standard",
         paymentMethod: 'COD',
         paymentStatus: 'Pending',
         orderStatus: 'Processing',
@@ -76,46 +70,45 @@ export const CreateOrder = async (req, res) => {
       const newOrder = new ORDER(newOrderData);
       await newOrder.save();
 
-      // Deduct stock for COD order
+      // Deduct stock
       for (const item of finalItems) {
-        await PRODUCT.findByIdAndUpdate(item.product, {
-          $inc: { stock: -item.quantity }
-        });
+        await PRODUCT.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } });
       }
 
-      if (newOrderData?.shippingAddress?.remember) {
-        await USER.findByIdAndUpdate(
-          userId,
-          {
-            $push: { orders: newOrder._id },
-            $addToSet: { addresses: newOrderData.shippingAddress }
-          },
-          { new: true }
-        );
+      if (shippingAddress?.remember) {
+        await USER.findByIdAndUpdate(userId, {
+          $push: { orders: newOrder._id },
+          $addToSet: { addresses: shippingAddress }
+        }, { new: true });
       } else {
-        await USER.findByIdAndUpdate(
-          userId,
-          { $push: { orders: newOrder._id } },
-          { new: true }
-        );
+        await USER.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } }, { new: true });
       }
 
       try {
         await sendOrderConfirmation(
-          OrderData?.shippingAddress?.email || OrderData?.user?.email,
-          OrderData?.shippingAddress?.name || OrderData?.user?.name,
-          newOrderData?.orderId,
-          OrderData.items,
-          newOrderData?.totalAmount
+          shippingAddress?.email || user?.email,
+          shippingAddress?.name || user?.name,
+          newOrderData.orderId,
+          items,
+          newOrderData.totalAmount
         );
       } catch (mailErr) {
         console.error("Mail send error:", mailErr.message);
       }
 
-      return res.status(200).json({ success: true, message: "Order saved successfully", orderid: newOrder._id, orderId: newOrder.orderId });
+      return res.status(200).json({
+        success: true,
+        message: "Order saved successfully",
+        orderid: newOrder._id,
+        orderId: newOrder.orderId
+      });
     }
 
-    // Online Razorpay Payment flow
+    // ── Online payment via Razorpay ──
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Authentication required for online payment" });
+    }
+
     const orderId = generateOrderId();
     const orderOptions = {
       amount: Math.round(totalAmount * 100),
@@ -123,6 +116,7 @@ export const CreateOrder = async (req, res) => {
       receipt: orderId
     };
 
+    // ── Fix B02: use 'instance' (the correct variable name) ──
     const order = await instance.orders.create(orderOptions);
     return res.json({
       success: true,
@@ -131,13 +125,17 @@ export const CreateOrder = async (req, res) => {
       order_id: order.id,
       product_name: items[0]?.name?.en || items[0]?.name || "ApnaBazaar Order",
       description: "Order payment for ApnaBazaar",
-      contact: OrderData.shippingAddress?.phone || OrderData.user?.phone,
-      name: OrderData.shippingAddress?.name || OrderData.user?.name,
-      email: OrderData.shippingAddress?.email || OrderData.user?.email
+      contact: shippingAddress?.phone || user?.phone,
+      name: shippingAddress?.name || user?.name,
+      email: shippingAddress?.email || user?.email
     });
   } catch (error) {
     console.error("CreateOrder error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Order creation failed" });
+    const isProduction = process.env.NODE_ENV === "production";
+    return res.status(500).json({
+      success: false,
+      message: isProduction ? "Order creation failed. Please try again." : error.message
+    });
   }
 };
 
@@ -146,16 +144,34 @@ export const verifyPayment = async (req, res) => {
     const { payment_id, order_id, signature } = req.body;
     let { orderData } = req.body;
 
+    if (!payment_id || !order_id || !signature) {
+      return res.status(400).json({ success: false, message: "Missing payment verification fields" });
+    }
+
     if (!orderData || !Array.isArray(orderData.items)) {
       return res.status(400).json({ success: false, message: "Invalid order data received" });
     }
+
+    // ── Fix B01: Verify signature strictly — no bypass_test backdoor ──
+    const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET_KEY);
+    shasum.update(order_id + "|" + payment_id);
+    const generated_signature = shasum.digest('hex');
+
+    if (generated_signature !== signature) {
+      return res.status(400).json({ success: false, message: "Payment verification failed: Invalid signature" });
+    }
+
+    // ── Fix B15: Batch-fetch all products in ONE query ──
+    const productIds = orderData.items.map(item => item.productID || item.productId || item._id || item.product);
+    const productDocs = await PRODUCT.find({ _id: { $in: productIds } });
+    const productMap = new Map(productDocs.map(p => [p._id.toString(), p]));
 
     let totalAmount = 0;
     const finalItems = [];
 
     for (const item of orderData.items) {
-      const pId = item.productID || item.productId || item._id || item.product;
-      const product = await PRODUCT.findById(pId);
+      const pId = (item.productID || item.productId || item._id || item.product)?.toString();
+      const product = productMap.get(pId);
       if (!product) {
         return res.status(400).json({ success: false, message: `Product not found for ID ${pId}` });
       }
@@ -164,11 +180,7 @@ export const verifyPayment = async (req, res) => {
       product.stock = Math.max(0, (product.stock || 0) - quantity);
       await product.save();
       totalAmount += price * quantity;
-      finalItems.push({
-        product: product._id,
-        quantity,
-        price
-      });
+      finalItems.push({ product: product._id, quantity, price });
     }
 
     totalAmount += (totalAmount * 2) / 100;
@@ -196,51 +208,43 @@ export const verifyPayment = async (req, res) => {
       totalAmount
     };
 
-    const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET_KEY || 'dummysecretkey123');
-    shasum.update(order_id + "|" + payment_id);
-    const generated_signature = shasum.digest('hex');
+    const newOrder = new ORDER(newOrderData);
+    await newOrder.save();
 
-    // In dev/test if signature matches or if testing without razorpay
-    if (generated_signature === signature || signature === 'bypass_test') {
-      const newOrder = new ORDER(newOrderData);
-      await newOrder.save();
-
-      if (newOrderData?.shippingAddress?.remember) {
-        await USER.findByIdAndUpdate(
-          userId,
-          {
-            $push: { orders: newOrder._id },
-            $addToSet: { addresses: newOrderData.shippingAddress }
-          },
-          { new: true }
-        );
-      } else {
-        await USER.findByIdAndUpdate(
-          userId,
-          { $push: { orders: newOrder._id } },
-          { new: true }
-        );
-      }
-
-      try {
-        await sendOrderConfirmation(
-          orderData?.shippingAddress?.email || orderData?.user?.email,
-          orderData?.shippingAddress?.name || orderData?.user?.name,
-          newOrderData?.orderId,
-          orderData.items,
-          newOrderData?.totalAmount
-        );
-      } catch (mailErr) {
-        console.error("Mail send error:", mailErr.message);
-      }
-
-      return res.status(200).json({ success: true, message: "Order saved successfully", orderid: newOrder._id, orderId: newOrder.orderId });
+    if (newOrderData?.shippingAddress?.remember) {
+      await USER.findByIdAndUpdate(userId, {
+        $push: { orders: newOrder._id },
+        $addToSet: { addresses: newOrderData.shippingAddress }
+      }, { new: true });
     } else {
-      return res.status(400).json({ success: false, message: "Payment verification failed: Signature mismatch" });
+      await USER.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } }, { new: true });
     }
+
+    try {
+      await sendOrderConfirmation(
+        orderData?.shippingAddress?.email || orderData?.user?.email,
+        orderData?.shippingAddress?.name || orderData?.user?.name,
+        newOrderData.orderId,
+        orderData.items,
+        newOrderData.totalAmount
+      );
+    } catch (mailErr) {
+      console.error("Mail send error:", mailErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order saved successfully",
+      orderid: newOrder._id,
+      orderId: newOrder.orderId
+    });
   } catch (error) {
     console.error('Error in verifyPayment:', error);
-    return res.status(500).json({ success: false, message: error.message || 'Error saving order' });
+    const isProduction = process.env.NODE_ENV === "production";
+    return res.status(500).json({
+      success: false,
+      message: isProduction ? "Payment processing failed. Please contact support." : error.message
+    });
   }
 };
 
@@ -262,7 +266,8 @@ export const getOrders = async (req, res) => {
 
     return res.status(200).json({ success: true, orders: user.orders || [] });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Error fetching orders', error: error.message });
+    console.error("getOrders error:", error);
+    return res.status(500).json({ success: false, message: "Error fetching orders" });
   }
 };
 
@@ -275,7 +280,8 @@ export const getOrder = async (req, res) => {
     }
     return res.status(200).json({ success: true, order });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Error fetching order', error: error.message });
+    console.error("getOrder error:", error);
+    return res.status(500).json({ success: false, message: "Error fetching order" });
   }
 };
 
@@ -288,6 +294,7 @@ export const getOrderByID = async (req, res) => {
     }
     return res.status(200).json({ success: true, order });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Error fetching order', error: error.message });
+    console.error("getOrderByID error:", error);
+    return res.status(500).json({ success: false, message: "Error fetching order" });
   }
 };

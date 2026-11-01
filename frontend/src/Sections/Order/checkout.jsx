@@ -95,7 +95,8 @@ const Checkout = () => {
                 const data = response?.data;
 
                 if (!data.success) {
-                    alert(data.msg || "Order creation failed");
+                    alert(data.msg || data.message || "Order creation failed");
+                    setLoading(false);
                     return;
                 }
                 setCartItems([]);
@@ -105,7 +106,8 @@ const Checkout = () => {
                 setOrderStatus(true);
             } catch (err) {
                 console.error("COD Order Error:", err);
-                alert("Failed to create COD order.");
+                alert(err?.response?.data?.message || "Failed to create COD order.");
+                setLoading(false);
             }
             return;
         }
@@ -171,7 +173,7 @@ const Checkout = () => {
                 return;
             }
             const rzp = new window.Razorpay(options);
-            rzp.on("payment.failed", () => alert("❌ Payment Failed"));
+            rzp.on("payment.failed", () => { setLoading(false); alert("❌ Payment Failed"); });
             rzp.open();
         } catch (err) {
             setLoading(false)

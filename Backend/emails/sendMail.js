@@ -62,12 +62,12 @@ export const sendVerificationMail = (to, token) => {
           If the button doesn’t work, copy and paste this link into your browser:
         </p>
 
-        <a href="\${verificationUrl}" style="
+        <a href="${verificationUrl}" style="
           color: #2563eb;
           font-size: 13px;
           word-break: break-all;
           text-decoration: none;
-        ">\${verificationUrl}</a>
+        ">${verificationUrl}</a>
 
         <hr style="
           border: none;
@@ -214,7 +214,7 @@ export const sendVendorApprovalMail = (to, userName) => {
         <p style="color: #333; font-size: 14px;">
           You can now log in to your vendor dashboard and start listing your products.
         </p>
-        <a href=${process.env.client_url}/signin" style="
+        <a href="${process.env.client_url || "https://apna-bazaar-o811.vercel.app"}/signin" style="
           display: inline-block;
           margin: 20px 0;
           padding: 12px 25px;

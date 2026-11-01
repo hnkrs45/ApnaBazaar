@@ -1,20 +1,21 @@
 import express from "express";
-import { 
-  getallproducts, 
-  getproduct, 
-  getproductsbyid, 
+import {
+  getallproducts,
+  getproduct,
+  getproductsbyid,
   searchProduct,
-  semanticSearch 
+  semanticSearch,
+  getSimilarProducts
 } from "../controller/product.js";
-import { getSimilarProducts } from "../controller/product.js";
-
+import { aiSearchLimiter } from "../index.js";
 
 const router = express.Router();
 
-router.get('/ai-search', semanticSearch);
+router.get('/ai-search', aiSearchLimiter, semanticSearch);  // AI endpoint — rate-limited
 router.get('/get', getproduct);
 router.get('/getall', getallproducts);
 router.get('/getbyid', getproductsbyid);
-router.get('/search', searchProduct);
+router.get('/search', aiSearchLimiter, searchProduct);      // also AI-backed — rate-limited
 router.get('/similar/:id', getSimilarProducts);
+
 export default router;
